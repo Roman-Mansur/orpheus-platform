@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audio Collection Platform - Engineering Spec</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#08090e;--bg2:#0d0e16;--bg3:#111320;--surface:#151826;--surface2:#1b1f30;--border:#232840;--border2:#2d3355;--text:#e4e6f0;--text2:#8890b0;--text3:#4a5070;--accent:#4169ff;--accent-dim:rgba(65,105,255,0.12);--green:#22c55e;--green-dim:rgba(34,197,94,0.12);--amber:#f59e0b;--amber-dim:rgba(245,158,11,0.12);--red:#ef4444;--red-dim:rgba(239,68,68,0.12);--purple:#8b5cf6;--purple-dim:rgba(139,92,246,0.15);--teal:#14b8a6;--teal-dim:rgba(20,184,166,0.12);--radius:6px;--radius-lg:10px;--radius-xl:14px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);min-height:100vh;font-family:'Inter',sans-serif;font-size:13px;}
+.sidebar{position:fixed;left:0;top:0;width:210px;height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:200;}
+.sidebar-logo{padding:16px 18px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+.logo-text{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.3px;}
+.logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent);}
+.role-switch{padding:10px 12px;border-bottom:1px solid var(--border);}
+.role-switch label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;}
+.role-select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;color:var(--text);font-size:12px;font-family:'Inter',sans-serif;outline:none;cursor:pointer;}
+.sidebar-nav{padding:10px 8px;flex:1;overflow-y:auto;}
+.nav-section{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;padding:8px 10px 4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius);cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;transition:all 0.15s;margin-bottom:2px;}
+.nav-item:hover{background:var(--surface);color:var(--text);}
+.nav-item.active{background:var(--accent-dim);color:var(--text);}
+.nav-item.hidden{display:none;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;}
+.sidebar-user{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--accent);flex-shrink:0;}
+.user-name{font-size:12px;font-weight:600;color:var(--text);}
+.user-role{font-size:11px;color:var(--accent);}
+.main{margin-left:210px;min-height:100vh;}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-title{font-size:18px;font-weight:600;color:var(--text);}
+.topbar-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.page{display:none;padding:24px;}
+.page.active{display:block;}
+.status-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto;}
+.status-tab{padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;transition:all 0.15s;margin-bottom:-1px;white-space:nowrap;}
+.status-tab:hover{color:var(--text);}
+.status-tab.active{color:var(--text);border-bottom-color:var(--accent);}
+.content-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;}
+.content-tab{padding:10px 18px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;transition:all 0.15s;margin-bottom:-1px;}
+.content-tab:hover{color:var(--text);}
+.content-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.content-panel{display:none;}
+.content-panel.active{display:block;}
+.task-table,.data-table{width:100%;border-collapse:collapse;}
+.task-table th,.data-table th{text-align:left;padding:10px 14px;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap;}
+.task-table td,.data-table td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);}
+.task-table tr:hover td,.data-table tr:hover td{background:var(--surface);cursor:pointer;}
+.table-wrap{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--bg2);}
+.pill{display:inline-flex;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap;}
+.pill-green{background:var(--green-dim);color:var(--green);}
+.pill-blue{background:var(--accent-dim);color:var(--accent);}
+.pill-purple{background:var(--purple-dim);color:var(--purple);}
+.pill-amber{background:var(--amber-dim);color:var(--amber);}
+.pill-red{background:var(--red-dim);color:var(--red);}
+.pill-gray{background:rgba(139,145,168,0.1);color:var(--text2);}
+.pill-teal{background:var(--teal-dim);color:var(--teal);}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);}
+.card-pad{padding:18px 20px;}
+.card-header{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+.btn{padding:8px 16px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;display:inline-flex;align-items:center;gap:7px;font-family:'Inter',sans-serif;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#3558e0;}
+.btn-primary:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-secondary{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+.btn-secondary:hover{color:var(--text);}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--text);}
+.btn-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,0.3);}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.input,.select,.textarea-main{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:9px 13px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;width:100%;}
+.input:focus,.select:focus,.textarea-main:focus{border-color:var(--border2);}
+.textarea-main{resize:vertical;line-height:1.7;color:var(--text2);}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;}
+.stat-label{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:0.4px;text-transform:uppercase;margin-bottom:8px;}
+.stat-value{font-size:24px;font-weight:700;color:var(--text);letter-spacing:-0.5px;}
+.stat-sub{font-size:12px;color:var(--text2);margin-top:4px;}
+.info-row{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);}
+.info-row:last-child{border-bottom:none;}
+.info-key{font-size:12px;color:var(--text3);min-width:200px;font-weight:500;}
+.info-val{font-size:12px;color:var(--text2);flex:1;line-height:1.6;}
+.search-row{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;}
+.pager{display:flex;gap:6px;align-items:center;justify-content:space-between;margin-top:14px;}
+.pager-info{font-size:12px;color:var(--text3);}
+.pager-btns{display:flex;gap:4px;}
+.pager-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:5px 10px;cursor:pointer;color:var(--text2);font-size:12px;}
+.pager-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.task-detail{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-top:16px;}
+.task-detail-header{padding:14px 20px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.task-detail-title{font-size:15px;font-weight:600;color:var(--text);}
+.task-detail-body{padding:20px;}
+.progress-bar-wrap{background:var(--bg3);border-radius:20px;height:8px;overflow:hidden;margin:8px 0;}
+.progress-bar-fill{height:100%;background:var(--accent);border-radius:20px;transition:width 0.4s;}
+.badge{display:inline-flex;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;}
+.badge-green{background:var(--green-dim);color:var(--green);}
+.badge-red{background:var(--red-dim);color:var(--red);}
+.badge-amber{background:var(--amber-dim);color:var(--amber);}
+.badge-blue{background:var(--accent-dim);color:var(--accent);}
+.callout{background:var(--accent-dim);border:1px solid rgba(65,105,255,0.25);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px;font-size:12px;color:var(--text2);line-height:1.6;}
+.callout-warn{background:var(--amber-dim);border-color:rgba(245,158,11,0.25);}
+.callout-ok{background:var(--green-dim);border-color:rgba(34,197,94,0.25);}
+.callout strong{color:var(--text);}
+.checklist-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.checklist-item:last-child{border-bottom:none;}
+.checklist-item input{margin-top:3px;accent-color:var(--accent);}
+.checklist-label{font-size:13px;color:var(--text2);line-height:1.5;}
+.checklist-label strong{color:var(--text);display:block;font-size:13px;}
+.recorder-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-xl);padding:20px;}
+.waveform{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);height:80px;margin:14px 0;display:flex;align-items:center;justify-content:center;gap:2px;padding:0 12px;overflow:hidden;}
+.wave-bar{width:3px;background:var(--accent);border-radius:2px;opacity:0.7;transition:height 0.1s;}
+.rec-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.rec-time{font-size:12px;font-family:monospace;color:var(--text3);min-width:80px;}
+.spec-tag{font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;color:var(--text3);font-family:monospace;}
+.state-flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:12px 0;}
+.state-node{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:6px 12px;font-size:11px;font-weight:600;color:var(--text2);font-family:monospace;}
+.state-node.active-node{border-color:var(--accent);background:var(--accent-dim);color:var(--accent);}
+.state-arrow{color:var(--text3);font-size:12px;}
+.state-table td{font-size:12px;}
+.flag-chip{display:inline-flex;align-items:center;gap:5px;background:var(--amber-dim);border:1px solid rgba(245,158,11,0.3);border-radius:4px;padding:4px 10px;font-size:11px;color:var(--amber);margin:3px 3px 3px 0;}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;}
+.meta-field label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px;}
+.meta-field .val{font-size:12px;color:var(--text);font-family:monospace;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:6px 10px;}
+.meta-field .val.editable{color:var(--text2);}
+.overview-section{margin-bottom:28px;}
+.overview-section h3{font-size:15px;font-weight:600;color:var(--text);margin-bottom:10px;}
+.overview-section p,.overview-section li{font-size:13px;color:var(--text2);line-height:1.7;}
+.overview-section ul{padding-left:18px;}
+.overview-section li{margin-bottom:4px;}
+.divider{height:1px;background:var(--border);margin:20px 0;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.transcript-box{min-height:80px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);line-height:1.7;font-size:13px;}
+.transcript-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:8px;}
+.transcript-label span{font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);font-size:10px;}
+.transcript-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.read-aloud-box{background:var(--accent-dim);border:1px solid rgba(65,105,255,0.25);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:16px;}
+.read-aloud-text{font-size:16px;line-height:1.7;color:var(--text);font-weight:500;}
+.lock-banner{background:var(--red-dim);border:1px solid rgba(239,68,68,0.35);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:16px;}
+.lock-banner.ok{background:var(--green-dim);border-color:rgba(34,197,94,0.35);}
+.attempt-badge{display:inline-flex;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);font-family:monospace;}
+.nav-item.locked{opacity:0.45;}
+.nav-item.locked::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--red);margin-left:auto;flex-shrink:0;}
+.history-table{font-size:12px;}
+.demo-bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);}
+.qc-overlay{position:fixed;inset:0;background:rgba(4,5,10,0.82);z-index:500;display:none;align-items:center;justify-content:center;padding:24px;}
+.qc-overlay.open{display:flex;}
+.qc-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-xl);width:min(720px,100%);max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.5);}
+.qc-modal-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.qc-modal-title{font-size:16px;font-weight:600;color:var(--text);}
+.qc-modal-body{padding:20px 22px;}
+.qc-step{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.qc-step:last-child{border-bottom:none;}
+.qc-step-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.qc-step-icon.pending{background:var(--border);color:var(--text3);}
+.qc-step-icon.running{background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);animation:qc-pulse 1s infinite;}
+.qc-step-icon.pass{background:var(--green-dim);color:var(--green);}
+.qc-step-icon.flag{background:var(--amber-dim);color:var(--amber);}
+.qc-step-icon.fail{background:var(--red-dim);color:var(--red);}
+@keyframes qc-pulse{0%,100%{opacity:1}50%{opacity:0.45}}
+.qc-step-body{flex:1;min-width:0;}
+.qc-step-name{font-size:13px;font-weight:600;color:var(--text);}
+.qc-step-detail{font-size:12px;color:var(--text3);margin-top:2px;line-height:1.5;}
+.qc-step-score{font-size:12px;font-family:monospace;color:var(--text2);margin-top:4px;}
+.qc-result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.qc-result-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;}
+.qc-result-card h4{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;}
+.qc-result-card p{font-size:12px;color:var(--text2);line-height:1.5;}
+.qc-flag-list{margin-top:14px;}
+.qc-flag-item{background:var(--amber-dim);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;font-size:12px;color:var(--text2);}
+.qc-flag-item strong{color:var(--amber);display:block;margin-bottom:3px;}
+.qc-flag-item.rerecord{background:var(--red-dim);border-color:rgba(239,68,68,0.3);}
+.qc-flag-item.rerecord strong{color:var(--red);}
+.priority-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:6px;box-shadow:0 0 6px var(--red);}
+.tbd-tag{font-size:9px;background:var(--purple-dim);color:var(--purple);padding:2px 6px;border-radius:3px;margin-left:6px;font-weight:600;}
+.audio-version-tabs{display:flex;gap:6px;margin-bottom:10px;}
+.audio-ver-tab{padding:5px 12px;font-size:11px;font-weight:600;border-radius:var(--radius);cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text3);}
+.audio-ver-tab.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
+@media(max-width:900px){.transcript-pair{grid-template-columns:1fr;}.qc-result-grid{grid-template-columns:1fr;}.sidebar{width:60px;}.sidebar-logo .logo-text,.role-switch label,.nav-item span,.sidebar-user div:last-child,.nav-section{display:none;}.main{margin-left:60px;}.grid-2,.grid-3,.grid-4,.meta-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-text">VOICE</div><div class="logo-dot"></div></div>
+  <div class="role-switch">
+    <label>View as</label>
+    <select class="role-select" id="role-select" onchange="switchRole(this.value)">
+      <option value="expert">Expert</option>
+      <option value="reviewer">Reviewer</option>
+      <option value="admin">Admin / HDM</option>
+      <option value="spec">Engineering Spec</option>
+    </select>
+  </div>
+  <nav class="sidebar-nav" id="sidebar-nav"></nav>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="user-avatar">R</div>
+    <div><div class="user-name" id="user-name">Roman Mansur</div><div class="user-role" id="user-role">Expert</div></div>
+  </div>
+</aside>
+<main class="main">
+<div class="topbar">
+  <div><div class="topbar-title" id="topbar-title">Task Dashboard</div><div class="topbar-sub" id="topbar-sub">Audio data collection platform</div></div>
+  <div id="topbar-actions"></div>
+</div>
+<div class="page" id="page-expert-tasks">
+  <div id="task-gate-banner"></div>
+  <div id="task-dashboard-content">
+  <div class="callout"><strong>Expert view.</strong> Tasks filtered to locale <span id="expert-locale-label">en_US</span>. Experts claim tasks. Progress: <strong id="progress-label">2 of 10 completed</strong>.</div>
+  <div class="progress-bar-wrap" style="max-width:400px;margin-bottom:16px"><div class="progress-bar-fill" id="progress-fill" style="width:20%"></div></div>
+  <div class="status-tabs">
+    <div class="status-tab active" onclick="filterExpertTasks('all',this)">All</div>
+    <div class="status-tab" onclick="filterExpertTasks('Unclaimed',this)">Available</div>
+    <div class="status-tab" onclick="filterExpertTasks('In Progress',this)">In Progress</div>
+    <div class="status-tab" onclick="filterExpertTasks('Submitted',this)">Submitted</div>
+    <div class="status-tab" onclick="filterExpertTasks('Rejected',this)">Rejected</div>
+    <div class="status-tab" onclick="filterExpertTasks('Approved',this)">Approved</div>
+  </div>
+  <div class="search-row">
+    <input class="input" placeholder="Search..." style="max-width:280px" id="expert-search" oninput="renderExpertTasks()">
+    <select class="select" style="width:auto" id="expert-batch-filter" onchange="renderExpertTasks()"><option value="">All Batches</option><option>Batch 1</option></select>
+    <select class="select" style="width:auto" id="expert-cat-filter" onchange="renderExpertTasks()"><option value="">All Categories</option><option>Scripted</option><option>Unscripted</option></select>
+  </div>
+  <div class="table-wrap"><table class="task-table"><thead><tr><th>Transcript</th><th>Task ID</th><th>Locale</th><th>Category</th><th>Batch</th><th>Status</th><th>Action</th></tr></thead><tbody id="expert-tbody"></tbody></table></div>
+  <div class="pager"><span class="pager-info" id="expert-pager-info"></span><div class="pager-btns" id="expert-pager-btns"></div></div>
+  </div>
+</div>
+<div class="page active" id="page-expert-screener">
+  <div id="screener-status-banner"></div>
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="card card-pad">
+      <div class="card-header">Assigned Screener <span class="attempt-badge" id="screener-attempt-badge">v1</span></div>
+      <div class="info-row"><span class="info-key">Screener ID</span><span class="info-val" id="scr-id">-</span></div>
+      <div class="info-row"><span class="info-key">Locale / Language</span><span class="info-val" id="scr-locale">-</span></div>
+      <div class="info-row"><span class="info-key">Expected filename</span><span class="info-val" id="scr-filename" style="font-family:monospace;font-size:11px">-</span></div>
+      <div class="info-row"><span class="info-key">Workflow</span><span class="info-val">Same as production task: verify transcript, equipment check, record/upload, force-listen, submit</span></div>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="scr-start-btn" onclick="openScreenerRecording()">Open Screener Recording</button>
+        <button class="btn btn-secondary btn-sm" id="scr-resubmit-btn" style="display:none" onclick="openScreenerRecording()">Resubmit (new attempt)</button>
+      </div>
+      <div class="demo-bar" id="screener-demo-bar">
+        <span style="font-size:11px;color:var(--text3);align-self:center">Demo controls:</span>
+        <button class="btn btn-ghost btn-sm" onclick="demoScreenerState('not_started')">Not started</button>
+        <button class="btn btn-ghost btn-sm" onclick="demoScreenerState('pending_review')">Pending review</button>
+        <button class="btn btn-ghost btn-sm" onclick="demoScreenerState('needs_rework')">Needs rework</button>
+        <button class="btn btn-ghost btn-sm" onclick="demoScreenerState('approved')">Approved</button>
+      </div>
+    </div>
+    <div class="card card-pad">
+      <div class="card-header">Transcripts (from client pool)</div>
+      <label class="transcript-label">Non-normalized</label>
+      <div class="transcript-box" id="scr-preview-raw" style="margin-bottom:10px"></div>
+      <label class="transcript-label">Normalized</label>
+      <div class="transcript-box" id="scr-preview-norm"></div>
+    </div>
+  </div>
+  <div class="card card-pad">
+    <div class="card-header">Your Submission History <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">mirrors Google Form / Excel tracker</span></div>
+    <div class="table-wrap"><table class="data-table history-table"><thead><tr>
+      <th>Timestamp</th><th>Attempt</th><th>Audio File</th><th>Locale</th><th>Client Approved?</th><th>Client Notes</th><th>Rework Sent?</th>
+    </tr></thead><tbody id="screener-history-tbody"></tbody></table></div>
+  </div>
+</div>
+<div class="page" id="page-expert-record">
+  <div id="record-empty" class="callout">Select a task and click <strong>Open Recording</strong>.</div>
+  <div id="record-workspace" style="display:none">
+    <div class="task-detail">
+      <div class="task-detail-header">
+        <div><div class="task-detail-title" id="rec-title"></div><div style="font-size:12px;color:var(--text3);margin-top:3px" id="rec-meta"></div><div id="rec-screener-tag" style="display:none;margin-top:6px"><span class="pill pill-purple">Screener Task</span></div></div>
+        <div style="display:flex;gap:8px;align-items:center"><span id="rec-status-pill"></span><span class="spec-tag">mono ù 16-bit ù 48kHz</span></div>
+      </div>
+      <div class="task-detail-body">
+        <div class="content-tabs">
+          <div class="content-tab active" onclick="showRecTab('transcript',this)">Transcript &amp; Verify</div>
+          <div class="content-tab" onclick="showRecTab('equipment',this)">Equipment Check</div>
+          <div class="content-tab" onclick="showRecTab('record',this)">Record / Upload</div>
+          <div class="content-tab" onclick="showRecTab('metadata',this)">Metadata</div>
+        </div>
+        <div class="content-panel active" id="rec-transcript">
+          <div class="callout callout-warn" id="verify-banner"><strong>Human verification required.</strong> Confirm localized speech patterns, spelling accuracy, and gender conjugations match your profile. Machine transcript is correct ~95% of the time (per Orpheus trainer guide).</div>
+          <div class="transcript-pair">
+            <div>
+              <label class="transcript-label">Original Transcript <span>(non-normalized, from JSON)</span></label>
+              <div class="transcript-box" id="rec-transcript-raw"></div>
+            </div>
+            <div>
+              <label class="transcript-label">Original Transcript <span>(normalized, from JSON)</span></label>
+              <div class="transcript-box" id="rec-transcript-normalized"></div>
+            </div>
+          </div>
+          <div class="callout" style="margin-bottom:14px"><strong>Read aloud:</strong> Record the non-normalized script exactly as written unless you submit a revision. Use upward inflection on questions. Zero tolerance for additions, omissions, or substitutions.</div>
+          <div class="transcript-pair">
+            <div>
+              <label class="transcript-label">Revised Transcript <span>(non-normalized, if edited)</span></label>
+              <textarea class="textarea-main" id="rec-revised" style="min-height:80px" placeholder="Leave blank if unchanged. Flagged at submission if edited." oninput="syncRevisedNormalized()"></textarea>
+            </div>
+            <div>
+              <label class="transcript-label">Revised Transcript <span>(normalized, if edited)</span></label>
+              <textarea class="textarea-main" id="rec-revised-normalized" style="min-height:80px" placeholder="Auto-suggested from revision; expert can adjust."></textarea>
+            </div>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('flag-reasons').style.display='block'">Flag Transcript Issue</button>
+            <button class="btn btn-primary btn-sm" onclick="confirmTranscript()">Confirm &amp; Continue</button>
+          </div>
+          <div id="flag-reasons" style="display:none;margin-top:12px">
+            <select class="select" style="width:auto"><option>Unclear prompt</option><option>Localization problem</option><option>Gender conjugation mismatch</option><option>Sounds unnatural when read aloud</option></select>
+          </div>
+        </div>
+        <div class="content-panel" id="rec-equipment">
+          <div class="callout"><strong>Equipment check</strong> before task unlocks.</div>
+          <div class="recorder-wrap"><div class="waveform" id="eq-waveform"></div><div class="rec-controls"><button class="btn btn-primary btn-sm" onclick="toggleEqRecord()" id="eq-rec-btn">Record Test</button><button class="btn btn-ghost btn-sm" onclick="playWave('eq')">Play</button><span class="rec-time" id="eq-time">00:00.0</span></div></div>
+          <div id="eq-result" style="margin-top:12px"></div><button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="passEquipment()" id="eq-pass-btn" disabled>Pass Check</button>
+        </div>
+        <div class="content-panel" id="rec-record">
+          <div class="content-tabs" style="margin-bottom:16px"><div class="content-tab active" onclick="showRecMode('browser',this)">Record in Browser</div><div class="content-tab" onclick="showRecMode('upload',this)">Upload WAV/MP4</div></div>
+          <div id="rec-mode-browser">
+            <div class="read-aloud-box">
+              <div class="card-header" style="margin-bottom:8px">Script to Record</div>
+              <div class="read-aloud-text" id="rec-read-aloud"></div>
+            </div>
+            <div class="recorder-wrap"><div class="waveform" id="main-waveform"></div><div class="rec-controls"><button class="btn btn-primary btn-sm" onclick="toggleMainRecord()" id="main-rec-btn">Record</button><button class="btn btn-ghost btn-sm" onclick="stopMainRecord()">Stop</button><button class="btn btn-ghost btn-sm" onclick="playWave('main')">Play</button><button class="btn btn-ghost btn-sm" onclick="rewindMain()">-0.1s</button><button class="btn btn-ghost btn-sm" onclick="replayMain()">From Start</button><button class="btn btn-secondary btn-sm" onclick="rerecordMain()">Re-record</button><span class="rec-time" id="main-time">00:00.0</span></div></div>
+            <div class="callout callout-warn" style="margin-top:12px" id="listen-gate"><strong>Force-listen required</strong> before submit. ~10 sec avg per task. Tone: upbeat/neutral customer service delivery.</div>
+          </div>
+          <div id="rec-mode-upload" style="display:none"><input type="file" accept=".wav,.mp4,audio/*" class="input" onchange="simulateUpload()"><div id="upload-status" style="margin-top:10px;font-size:12px;color:var(--text3)"></div></div>
+          <textarea class="textarea-main" id="rec-notes" style="min-height:60px;margin-top:16px" placeholder="Notes for reviewer"></textarea>
+          <div style="margin-top:16px;display:flex;gap:8px;align-items:center"><button class="btn btn-primary" id="submit-rec-btn" disabled onclick="submitRecording()">Submit</button><span style="font-size:12px;color:var(--text3)" id="submit-hint">Listen first</span><span style="font-size:11px;color:var(--text3);font-family:monospace" id="submit-filename"></span></div>
+        </div>
+        <div class="content-panel" id="rec-metadata"><div class="callout callout-ok"><strong>Auto-populated at submit.</strong> Read-only for expert.</div><div class="meta-grid" id="metadata-grid"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="page" id="page-expert-onboard">
+  <div class="card card-pad" style="max-width:480px">
+    <div class="card-header">Expert Onboarding</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Required before screener. Gender, locale, language, age range, native language - dropdowns from client list.</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <select class="select"><option>Gender: Female</option><option>Male</option></select>
+      <select class="select"><option>en_US - English (US)</option><option>es_MX</option><option>hi_IN</option></select>
+      <select class="select"><option>Age: 26-35</option></select>
+      <select class="select"><option>Native language: English</option></select>
+      <button class="btn btn-primary btn-sm" style="width:fit-content">Save Profile</button>
+    </div>
+    <div class="callout" style="margin-top:16px"><strong>Next step:</strong> Complete the <strong>Screener</strong> tab and pass client review before the Task Dashboard unlocks.</div>
+  </div>
+</div>
+
+<div class="page" id="page-admin-screener">
+  <div class="callout"><strong>Screener queue</strong> replaces manual Google Form + Excel (<em>Project Orpheus Screener Task Submission (Responses)</em>). Client/Cartesia approves or sends rework; experts resubmit with incremented attempt (v2, v3...).</div>
+  <div class="table-wrap"><table class="data-table history-table"><thead><tr>
+    <th>Expert</th><th>Email</th><th>Locale</th><th>Attempt</th><th>Audio</th><th>Submitted</th><th>Client Approval</th><th>Notes</th><th>Actions</th>
+  </tr></thead><tbody id="admin-screener-tbody"></tbody></table></div>
+</div>
+
+<div class="page" id="page-reviewer-qc">
+  <div class="callout callout-warn"><strong><span class="priority-dot"></span>High-priority QC Flags.</strong> Every submission runs through auto-QC models on submit. Flagged tasks surface here first for reviewers. Flags are advisory ù reviewers use them as listening cues, not auto-rejects.</div>
+  <div class="grid-4" style="margin-bottom:16px" id="qc-stats-row"></div>
+  <div class="table-wrap"><table class="task-table"><thead><tr>
+    <th>Priority</th><th>Task ID</th><th>Expert</th><th>Locale</th><th>Flags</th><th>SNR</th><th>WER</th><th>UTMOS</th><th>Re-record Rec.</th><th>Override?</th><th>Action</th>
+  </tr></thead><tbody id="qc-flags-tbody"></tbody></table></div>
+  <div class="task-detail" id="qc-flag-detail" style="display:none;margin-top:16px">
+    <div class="task-detail-header"><div class="task-detail-title" id="qfd-title"></div><span class="pill pill-red">High Priority</span></div>
+    <div class="task-detail-body">
+      <div class="grid-2">
+        <div>
+          <div class="card-header">Auto-QC Model Results</div>
+          <div id="qfd-models"></div>
+          <div class="card-header" style="margin-top:14px">Audio Versions</div>
+          <div class="audio-version-tabs"><div class="audio-ver-tab active" id="qfd-tab-raw" onclick="qfdSwitchAudio('raw')">Raw</div><div class="audio-ver-tab" id="qfd-tab-proc" onclick="qfdSwitchAudio('processed')">Processed</div></div>
+          <div class="recorder-wrap"><div class="waveform" id="qfd-waveform"></div><div style="font-size:11px;color:var(--text3);margin-top:6px;font-family:monospace" id="qfd-audio-path"></div></div>
+        </div>
+        <div>
+          <div class="card-header">Transcript (for ASR compare)</div>
+          <div class="transcript-box" id="qfd-transcript"></div>
+          <div class="card-header" style="margin-top:14px">Flag Details</div>
+          <div id="qfd-flag-details"></div>
+        </div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="claimQcFlagReview()">Claim for Review</button><button class="btn btn-ghost btn-sm" onclick="document.getElementById('qc-flag-detail').style.display='none'">Close</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-reviewer-queue">
+  <div class="callout"><strong>Two-pass review.</strong> Initial by peers. Final by HDM/SPL for flagged/edge cases.</div>
+  <div class="status-tabs">
+    <div class="status-tab active" onclick="filterReview('all',this)">All</div>
+    <div class="status-tab" onclick="filterReview('Initial Review Ready',this)">Initial Ready</div>
+    <div class="status-tab" onclick="filterReview('In Initial Review',this)">In Initial</div>
+    <div class="status-tab" onclick="filterReview('Final Review Ready',this)">Final Ready</div>
+    <div class="status-tab" onclick="filterReview('Flagged',this)">Auto-QC Flagged</div>
+  </div>
+  <div class="table-wrap"><table class="task-table"><thead><tr><th>Task ID</th><th>Expert</th><th>Locale</th><th>Stage</th><th>Flags</th><th>SNR</th><th>WER</th><th>Action</th></tr></thead><tbody id="review-tbody"></tbody></table></div>
+  <div class="task-detail" id="review-detail" style="display:none;margin-top:16px">
+    <div class="task-detail-header"><div class="task-detail-title" id="rev-title"></div><div id="rev-flags"></div></div>
+    <div class="task-detail-body">
+      <div class="grid-2">
+        <div><div class="card-header">Audio</div><div class="recorder-wrap"><div class="waveform" id="rev-waveform"></div><div class="rec-controls"><button class="btn btn-ghost btn-sm" onclick="playWave('rev')">Play</button><button class="btn btn-ghost btn-sm">-0.1s</button><button class="btn btn-ghost btn-sm">Replay</button></div></div></div>
+        <div><div class="card-header">Transcripts</div>
+          <label class="transcript-label">Non-normalized (original)</label>
+          <div class="transcript-box" id="rev-transcript-raw" style="margin-bottom:10px"></div>
+          <label class="transcript-label">Normalized (original)</label>
+          <div class="transcript-box" id="rev-transcript-normalized" style="margin-bottom:10px"></div>
+          <div id="rev-revised-block" style="display:none">
+            <label class="transcript-label">Revised (non-normalized)</label>
+            <div class="transcript-box" id="rev-transcript-revised" style="margin-bottom:10px;border-color:var(--amber)"></div>
+            <label class="transcript-label">Revised (normalized)</label>
+            <div class="transcript-box" id="rev-transcript-revised-norm" style="border-color:var(--amber)"></div>
+          </div>
+          <div id="rev-revised-note" style="margin-top:8px;font-size:12px;color:var(--amber);display:none"></div>
+        </div>
+      </div>
+      <div class="divider"></div><div class="card-header">Acoustic Checklist</div><div id="review-checklist"></div>
+      <textarea class="textarea-main" id="rev-reject-note" style="min-height:60px;margin-top:16px" placeholder="Rejection note (required on reject)"></textarea>
+      <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap" id="rev-actions"></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-admin-dashboard">
+  <div class="grid-4" style="margin-bottom:20px">
+    <div class="stat-card"><div class="stat-label">Hours Delivered</div><div class="stat-value">847</div><div class="stat-sub">of 2,400 target</div></div>
+    <div class="stat-card"><div class="stat-label">In Pipeline</div><div class="stat-value">312</div><div class="stat-sub">all stages</div></div>
+    <div class="stat-card"><div class="stat-label">Acceptance Rate</div><div class="stat-value">91%</div><div class="stat-sub">7 days</div></div>
+    <div class="stat-card"><div class="stat-label">Pending Upload</div><div class="stat-value">3</div><div class="stat-sub">batches</div></div>
+  </div>
+  <div class="card card-pad"><div class="card-header">Locale Progress</div><table class="data-table"><thead><tr><th>Locale</th><th>Hours</th><th>Target</th><th>% Complete</th></tr></thead><tbody id="locale-progress-tbody"></tbody></table></div>
+</div>
+
+<div class="page" id="page-admin-batches">
+  <div class="callout callout-warn"><strong>Delivery TBD</strong> - client S3 details pending. CSV = metadata only, audio by ID in S3.</div>
+  <table class="data-table"><thead><tr><th>Batch</th><th>Locale</th><th>Files</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+    <tr><td>Batch 1</td><td>en_US</td><td>1240</td><td><span class="pill pill-green">Delivered</span></td><td><button class="btn btn-ghost btn-sm">0_metadata.csv</button></td></tr>
+    <tr><td>Batch 1</td><td>es_MX</td><td>890</td><td><span class="pill pill-amber">Uploading</span></td><td><button class="btn btn-primary btn-sm">Upload</button></td></tr>
+  </tbody></table>
+</div>
+
+<div class="page" id="page-admin-manage">
+  <div class="grid-2">
+    <div class="card card-pad"><div class="card-header">Management</div>
+      <div class="info-row"><span class="info-key">Flag for SPL/HDM</span><span class="info-val">Expert button or auto-QC. HDM: comment, discard, reset, reassign.</span></div>
+      <div class="info-row"><span class="info-key">Script ingest</span><span class="info-val">JSON: id, language, locale, transcript (non-normalized), normalized_transcript, batch, category</span></div>
+    </div>
+    <div class="card card-pad"><div class="card-header">Audit Log</div>
+      <table class="data-table"><tr><td>May 23 14:02</td><td>reviewer_03</td><td>Initial pass</td><td>T-10482</td></tr>
+      <tr><td>May 23 13:58</td><td>system</td><td>SNR flag 12.4</td><td>T-10482</td></tr></table>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-spec-overview">
+  <div class="overview-section"><h3>Platform Overview</h3><p>Audio collection for voice actors: scripted tasks, record, submit, review, deliver.</p></div>
+  <div class="overview-section"><h3>Roles</h3><ul><li><strong>Expert</strong> - claim, verify transcript, record, submit</li><li><strong>Reviewer</strong> - initial peer review + checklist</li><li><strong>Admin/HDM</strong> - final review, batches, delivery, audit</li></ul></div>
+  <div class="overview-section"><h3>Decisions</h3><ul><li>Human transcript verification (same expert, combined with recording)</li><li>Each task JSON provides <strong>both</strong> original transcripts: non-normalized + normalized</li><li>Locale-restricted tasks</li><li>Auto-QC on every submit: noise reduction ? echo reduction ? volume normalization ? VAD trim ? ASR/WER ? SNR ? UTMOSv2 (TBD) ? artifact detection (TBD)</li><li>Flags are advisory; re-record recommended can be overridden by expert</li><li>Flagged tasks surface in reviewer QC Flags tab (high priority)</li><li>Raw + processed audio stored on submit</li><li>Final review: HDM/SPL when flagged/edge case</li><li>Screener: client set, random by locale</li></ul></div>
+  <div class="overview-section"><h3>Orpheus Trainer Guide (key points)</h3><ul><li>~10 sec recordings; read transcript exactly as written (zero tolerance)</li><li>Revise if unnatural; verify grammar, gender conjugations, localization</li><li>Upward inflection on questions; upbeat/neutral customer service tone</li><li>Test recording before batch; WAV 24kHz min (platform target: mono 16-bit 48kHz)</li><li><strong>Screener gate:</strong> client approves before production tasking; resubmit v2/v3 on rework</li></ul></div>
+  <div class="overview-section"><h3>Screener flow</h3><ul><li>Random script from client pool matched to expert locale</li><li>Same UI as production: both transcript variants, equipment check, record, submit</li><li>Tracks attempts + client feedback (replaces Google Form / Excel)</li><li>Task Dashboard locked until Client Approved = Yes</li></ul></div>
+</div>
+
+<div class="page" id="page-spec-pipeline">
+  <div class="overview-section"><h3>Auto-QC pipeline (on every submit)</h3><ol style="padding-left:18px;color:var(--text2);line-height:2">
+    <li>Noise reduction, echo reduction, volume normalization (on-platform)</li>
+    <li>VAD trim - clip to speech boundaries</li>
+    <li>ASR verification - WER vs revised or original transcript</li>
+    <li>SNR verification - flag if &lt;= 15.0</li>
+    <li>UTMOSv2 naturalness scoring <span class="tbd-tag">TBD @Sina</span></li>
+    <li>Artifact detection <span class="tbd-tag">TBD @Sina</span></li>
+  </ol><p style="color:var(--text2);font-size:12px;margin-top:8px">Flags are advisory. Re-record recommended can be overridden by expert. All flagged tasks go to reviewer QC Flags tab (high priority). Raw + processed audio stored.</p></div>
+  <div class="overview-section"><h3>Metadata fields</h3><p style="color:var(--text2)">speaker_id, language, locale, transcript_id, script_batch, category, duration_s, <strong>transcript</strong> (non-normalized), <strong>normalized_transcript</strong>, transcript_revision, revised_transcript, revised_normalized_transcript, age_range, gender, native_language.</p></div>
+  <div class="overview-section"><h3>Script JSON ingest</h3>
+  <pre style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:11px;color:var(--text2);overflow-x:auto;line-height:1.6">{
+  "id": "TX-10001",
+  "language": "English",
+  "locale": "en_US",
+  "transcript": "Your package arrives between 2 and 5 PM.",
+  "normalized_transcript": "Your package arrives between two and five P M.",
+  "script_batch": "Batch 1",
+  "transcript_category": "Scripted",
+  "transcript_subcategory": "customer_service"
+}</pre>
+  <p style="color:var(--text3);font-size:12px;margin-top:8px">Both original transcript variants are provided by client at ingest. ASR QC compares against revised (or original non-normalized if unmodified).</p></div>
+</div>
+
+<div class="page" id="page-spec-states">
+  <div class="overview-section"><h3>State Machine</h3><div class="state-flow" id="state-flow-display"></div>
+  <table class="data-table state-table" style="margin-top:16px"><thead><tr><th>From</th><th>To</th><th>By</th><th>Notes</th></tr></thead><tbody id="state-transitions"></tbody></table>
+  <p style="margin-top:12px;color:var(--text2);font-size:12px">Reject at review -> back to expert -> re-record -> submitted</p></div>
+</div>
+
+<div class="page" id="page-spec-locales">
+  <div class="card-header">Batch 1 Locales</div>
+  <div class="table-wrap"><table class="data-table"><thead><tr><th>Locale</th><th>Language</th></tr></thead><tbody id="locales-tbody"></tbody></table></div>
+</div>
+
+</main>
+
+<div class="qc-overlay" id="qc-overlay">
+  <div class="qc-modal">
+    <div class="qc-modal-header">
+      <div><div class="qc-modal-title" id="qc-modal-title">Running Auto-QC Pipeline</div><div style="font-size:12px;color:var(--text3);margin-top:3px" id="qc-modal-sub">Analyzing submission...</div></div>
+      <button class="btn btn-ghost btn-sm" id="qc-modal-close" style="display:none" onclick="closeQcModal()">Close</button>
+    </div>
+    <div class="qc-modal-body">
+      <div id="qc-pipeline-steps"></div>
+      <div id="qc-audio-versions" style="display:none;margin-top:16px">
+        <div class="card-header">Stored Audio Versions</div>
+        <div class="audio-version-tabs"><div class="audio-ver-tab active" onclick="switchAudioVer('raw',this)">Raw (original upload)</div><div class="audio-ver-tab" onclick="switchAudioVer('processed',this)">Processed (post-pipeline)</div></div>
+        <div class="recorder-wrap"><div class="waveform" id="qc-audio-wave"></div><div style="font-size:11px;color:var(--text3);margin-top:8px;font-family:monospace" id="qc-audio-path"></div></div>
+      </div>
+      <div id="qc-flags-panel" style="display:none">
+        <div class="card-header" style="margin-top:16px">QC Flags &amp; Recommendations</div>
+        <div class="qc-flag-list" id="qc-flag-list"></div>
+      </div>
+      <div id="qc-rerecord-panel" style="display:none;margin-top:14px" class="callout callout-warn">
+        <strong>Re-record recommended.</strong> <span id="qc-rerecord-reason"></span>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="qcChooseRerecord()">Re-record Now</button>
+          <button class="btn btn-primary btn-sm" onclick="qcOverrideRerecord()">Override &amp; Keep Submission</button>
+        </div>
+      </div>
+      <div id="qc-done-panel" style="display:none;margin-top:16px">
+        <div class="callout callout-ok" id="qc-done-msg"></div>
+        <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="closeQcModal()">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const LOCALES=[
+["en_US","English (US)"],["en_GB","English (UK)"],["en_AU","English (AU)"],["es_ES","Spanish (Spain)"],["es_MX","Spanish (Mexico)"],["fr_FR","French (France)"],["de_DE","German"],["ar_001","Arabic (MSA)"],["hi_IN","Hindi"],["en_IN","English (India)"],["fr_CA","French (Canada)"],["ja_JP","Japanese"],["ko_KR","Korean"],["da_DK","Danish"],["nl_NL","Dutch"],["it_IT","Italian"],["zh_CN","Mandarin"],["pt_BR","Portuguese (BR)"],["th_TH","Thai"],["ur_PK","Urdu"],["ta_IN","Tamil"],["te_IN","Telugu"],["bn_IN","Bengali"],["gu_IN","Gujarati"],["pa_IN","Punjabi"],["tl_PH","Tagalog"],["kn_IN","Kannada"],["ml_IN","Malayalam"],["or_IN","Odia"],["he_IL","Hebrew"],["zh_HK","Cantonese"],["de_CH","Swiss German"],["fi_FI","Finnish"],["nb_NO","Norwegian"],["tr_TR","Turkish"],["pt_PT","Portuguese (Portugal)"],["mr_IN","Marathi"],["en_SG","Singaporean English"]
+];
+const CHECKLIST=[
+"Non-speech noises (clicks, thumps, mic handling)",
+"Background interference / echo",
+"Biometric artifacts (mouth noise, breathing)",
+"Natural pacing and pausing",
+"Tone: upbeat/neutral, customer service delivery (not dramatic)"
+];
+const STATES=["Unclaimed","In Progress","Submitted","Auto-QC","Flagged","Initial Review Ready","In Initial Review","Final Review Ready","In Final Review","Approved","Uploaded"];
+const TRANSITIONS=[
+["Unclaimed","In Progress","Expert","Claims task (locale match)"],
+["In Progress","Submitted","Expert","Transcript verified + recording submitted"],
+["Submitted","Auto-QC","System","Pipeline runs on submit"],
+["Auto-QC","Initial Review Ready","System","SNR/ASR passed"],
+["Auto-QC","Flagged","System","SNR <= 15 or WER threshold"],
+["Flagged","Initial Review Ready","System","Still enters review queue"],
+["Initial Review Ready","In Initial Review","Reviewer","Reviewer claims"],
+["In Initial Review","Final Review Ready","Reviewer","Pass to final (if needed)"],
+["In Initial Review","Approved","Reviewer","Pass without final (normal path)"],
+["In Initial Review","In Progress","Reviewer","Reject with note"],
+["Final Review Ready","In Final Review","HDM/SPL","Claims final review"],
+["In Final Review","Approved","HDM/SPL","Approve"],
+["In Final Review","In Progress","HDM/SPL","Reject with note"],
+["Approved","Uploaded","Admin","Batch upload to S3"]
+];
+const NAV={
+expert:[
+  {id:"expert-screener",label:"Screener",icon:"M8 2a6 6 0 100 12A6 6 0 008 2zM8 6v4M8 12h.01"},
+  {id:"expert-tasks",label:"Task Dashboard",icon:"M2 4h12M2 8h12M2 12h8",gate:true},
+  {id:"expert-record",label:"Recording",icon:"M8 2v12M5 5h6M5 11h6"},
+  {id:"expert-onboard",label:"Onboarding",icon:"M8 8a3 3 0 100-6 3 3 0 000 6zM2 14s2-4 6-4 6 4 6 4"}
+],
+reviewer:[{id:"reviewer-qc",label:"QC Flags",icon:"M8 2a6 6 0 100 12A6 6 0 008 2zM8 6v4"},{id:"reviewer-queue",label:"Review Queue",icon:"M3 12l3-4 3 2 4-6"}],
+admin:[{id:"admin-dashboard",label:"Dashboard",icon:"M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z"},{id:"admin-screener",label:"Screener Queue",icon:"M8 2a6 6 0 100 12A6 6 0 008 2z"},{id:"admin-batches",label:"Batches & Delivery",icon:"M2 6h12l-1 8H3L2 6z"},{id:"admin-manage",label:"Manage & Audit",icon:"M4 4h8v8H4z"}],
+spec:[{id:"spec-overview",label:"Overview",icon:"M2 4h12M2 8h8M2 12h10"},{id:"spec-pipeline",label:"Pipeline & Metadata",icon:"M8 2v12M4 6h8"},{id:"spec-states",label:"State Machine",icon:"M2 8h4l2 4 2-4h4"},{id:"spec-locales",label:"Locales",icon:"M2 2h12v12H2z"}]
+};
+const TITLES={
+  "expert-screener":"Screener Task",
+  "expert-tasks":"Task Dashboard",
+  "expert-record":"Recording Interface",
+  "expert-onboard":"Onboarding",
+  "admin-screener":"Screener Queue",
+  "reviewer-qc":"QC Flags (High Priority)",
+  "reviewer-queue":"Review Queue",
+  "admin-dashboard":"Admin Dashboard",
+  "admin-batches":"Batches & Delivery",
+  "admin-manage":"Manage & Audit",
+  "spec-overview":"Engineering Spec",
+  "spec-pipeline":"Pipeline & Metadata",
+  "spec-states":"State Machine",
+  "spec-locales":"Locales"
+};
+const TRANSCRIPT_DATA=[
+  {raw:"Thank you for calling customer support. How can I help you today?",norm:"Thank you for calling customer support. How can I help you today?"},
+  {raw:"I would be happy to look up your order status. Could you provide your confirmation number?",norm:"I would be happy to look up your order status. Could you provide your confirmation number?"},
+  {raw:"Your package is scheduled to arrive tomorrow between 2 and 5 PM.",norm:"Your package is scheduled to arrive tomorrow between two and five P M."},
+  {raw:"Let me transfer you to our billing department for further assistance.",norm:"Let me transfer you to our billing department for further assistance."},
+  {raw:"I understand your concern and I will make sure we resolve this for you.",norm:"I understand your concern and I will make sure we resolve this for you."},
+  {raw:"Please hold while I pull up your account details.",norm:"Please hold while I pull up your account details."},
+  {raw:"Is there anything else I can help you with today?",norm:"Is there anything else I can help you with today?"},
+  {raw:"Your refund has been processed and should appear within 3 to 5 business days.",norm:"Your refund has been processed and should appear within three to five business days."},
+  {raw:"I apologize for the inconvenience. Let me fix that right away.",norm:"I apologize for the inconvenience. Let me fix that right away."},
+  {raw:"Thank you for your patience. Your issue has been resolved.",norm:"Thank you for your patience. Your issue has been resolved."}
+];
+function normalizeTranscript(text){
+  const map={"0":"zero","1":"one","2":"two","3":"three","4":"four","5":"five","6":"six","7":"seven","8":"eight","9":"nine"," PM":" P M"," AM":" A M"};
+  let out=text;
+  Object.entries(map).forEach(([k,v])=>{out=out.split(k).join(v);});
+  return out.replace(/\s+/g," ").trim();
+}
+function getReadAloudScript(){
+  const revised=document.getElementById("rec-revised").value.trim();
+  return revised||document.getElementById("rec-transcript-raw").textContent;
+}
+function syncRevisedNormalized(){
+  const revised=document.getElementById("rec-revised").value.trim();
+  const normEl=document.getElementById("rec-revised-normalized");
+  if(!revised){normEl.value="";updateReadAloud();return;}
+  if(!normEl.dataset.manual||normEl.value===normEl.dataset.lastAuto){
+    const auto=normalizeTranscript(revised);
+    normEl.value=auto;
+    normEl.dataset.lastAuto=auto;
+  }
+  updateReadAloud();
+}
+function updateReadAloud(){
+  const el=document.getElementById("rec-read-aloud");
+  if(el)el.textContent=getReadAloudScript();
+}
+document.addEventListener("input",e=>{
+  if(e.target&&e.target.id==="rec-revised-normalized")e.target.dataset.manual="1";
+});
+let currentRole="expert",currentPage="expert-screener",expertFilter="all",expertPage=1,reviewFilter="all";
+let currentRecTask=null,currentRecIsScreener=false,transcriptConfirmed=false,equipmentPassed=false,hasRecording=false,hasListened=false;
+let eqRecording=false,mainRecording=false,mainTime=0,eqTime=0,waveInterval=null;
+const EXPERT_LOCALE="en_US";
+const EXPERT_PROFILE={
+  first:"Maria",last:"Chen",email:"sala968@expert.micro1.ai",slack:"syence.d@gmail.com",
+  locale:"en_US",language:"English",screenerStatus:"needs_rework"
+};
+const SCREENER_POOL=[
+  {id:"SCR-en-042",locale:"en_US",language:"English",
+   transcript:"I would be happy to look up your order status. Could you provide your confirmation number?",
+   normalized_transcript:"I would be happy to look up your order status. Could you provide your confirmation number?"},
+  {id:"SCR-en-017",locale:"en_US",language:"English",
+   transcript:"Thank you for calling customer support. How can I help you today?",
+   normalized_transcript:"Thank you for calling customer support. How can I help you today?"},
+  {id:"SCR-es-011",locale:"es_MX",language:"Spanish",
+   transcript:"Gracias por llamar al servicio al cliente. En que puedo ayudarle hoy?",
+   normalized_transcript:"Gracias por llamar al servicio al cliente. En que puedo ayudarle hoy?"}
+];
+let SCREENER_SUBMISSIONS=[
+  {id:1,expert_email:"sala968@expert.micro1.ai",slack:"syence.d@gmail.com",timestamp:"May 10, 2026 7:51 PM",attempt:1,locale:"en_US",language:"English",audio:"drive.google.com/.../v1",clientApproved:"Needs Work",clientNotes:"intonation",reworkSent:"Yes",filename:"maria_chen_screener_task_v1.wav"},
+  {id:2,expert_email:"stko707@expert.micro1.ai",slack:"steve.kordosky@gmail.com",timestamp:"May 10, 2026 7:12 PM",attempt:1,locale:"en_US",language:"English North America",audio:"drive.google.com/.../steve",clientApproved:"Yes",clientNotes:"",reworkSent:"",filename:"steven_kordosky_screener_task_v1.wav"},
+  {id:3,expert_email:"laja442@expert.micro1.ai",slack:"lanae.alexandra@gmail.com",timestamp:"May 11, 2026 6:18 AM",attempt:1,locale:"en_US",language:"English",audio:"drive.google.com/.../lanae",clientApproved:"Needs Work",clientNotes:"",reworkSent:"Yes",filename:"lanae_jahangani_screener_task_v1.wav"},
+  {id:4,expert_email:"rigo554@expert.micro1.ai",slack:"ricardogonzalezwork@gmail.com",timestamp:"May 18, 2026 6:26 PM",attempt:1,locale:"es_MX",language:"English, Spanish, French",audio:"drive.google.com/.../ricardo",clientApproved:"Needs Work",clientNotes:"has plosive",reworkSent:"Yes",filename:"ricardo_gonzalez_screener_task_v1.wav",peerApproved:"Needs Work"}
+];
+function getAssignedScreener(){
+  return SCREENER_POOL.find(s=>s.locale===EXPERT_PROFILE.locale)||SCREENER_POOL[0];
+}
+function getExpertSubmissions(){
+  return SCREENER_SUBMISSIONS.filter(s=>s.expert_email===EXPERT_PROFILE.email);
+}
+function getNextScreenerAttempt(){
+  const subs=getExpertSubmissions();
+  return subs.length?Math.max(...subs.map(s=>s.attempt))+1:1;
+}
+function screenerFilename(attempt){
+  return EXPERT_PROFILE.first.toLowerCase()+"_"+EXPERT_PROFILE.last.toLowerCase()+"_screener_task_v"+attempt+".wav";
+}
+function isScreenerApproved(){return EXPERT_PROFILE.screenerStatus==="approved";}
+function screenerPill(status){
+  const m={"not_started":"pill-gray","pending_review":"pill-amber","needs_rework":"pill-red","approved":"pill-green"};
+  const labels={"not_started":"Not Started","pending_review":"Pending Client Review","needs_rework":"Needs Rework","approved":"Approved"};
+  return `<span class="pill ${m[status]||"pill-gray"}">${labels[status]||status}</span>`;
+}
+
+const QC_PIPELINE=[
+  {id:"noise",name:"Noise Reduction",desc:"On-platform denoising applied to submission"},
+  {id:"echo",name:"Echo Reduction",desc:"Reverb / room echo suppression"},
+  {id:"normalize",name:"Volume Normalization",desc:"Peak / loudness normalized to target LUFS"},
+  {id:"vad",name:"VAD Trim",desc:"Clip head and tail to speech boundaries"},
+  {id:"asr",name:"ASR Verification",desc:"Compare utterance vs transcript ù flag if WER exceeds threshold"},
+  {id:"snr",name:"SNR Verification",desc:"Flag if SNR <= 15.0 (background noise relative to speech)"},
+  {id:"utmos",name:"UTMOSv2 Naturalness",desc:"MOS-style naturalness scoring",tbd:true},
+  {id:"artifact",name:"Artifact Detection",desc:"Filter-based click/pop/artifact detection",tbd:true}
+];
+const QC_FLAG_DESC={
+  SNR:"Potentially larger background noise relative to speech audio (SNR <= 15.0).",
+  ASR:"Spoken audio may not match submitted transcript ù WER exceeds threshold.",
+  UTMOS:"Naturalness score below expected range ù review tone and delivery.",
+  ARTIFACT:"Potential audio artifacts detected (clicks, pops, or processing anomalies)."
+};
+let qcPendingTask=null,qcPendingCallback=null,qcCurrentAudioVer="raw",qfdCurrentTaskId=null;
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function simulateQCResults(task){
+  const seed=typeof task.id==="number"?task.id:task.id.length*7;
+  const snr=8+((seed*13)%20);
+  const wer=((seed*7)%35)/100;
+  const utmos=2.5+((seed*3)%25)/10;
+  const artifactScore=((seed*11)%100)/100;
+  const flags=[];
+  if(snr<=15)flags.push({code:"SNR",value:snr.toFixed(1),severity:"review"});
+  if(wer>0.15)flags.push({code:"ASR",value:(wer*100).toFixed(1)+"%",severity:"review"});
+  if(utmos<3.2)flags.push({code:"UTMOS",value:utmos.toFixed(2),severity:"review",tbd:true});
+  if(artifactScore>0.35)flags.push({code:"ARTIFACT",value:artifactScore.toFixed(2),severity:"review",tbd:true});
+  const recommendRerecord=snr<=10||wer>0.25||(flags.length>=2);
+  const models=QC_PIPELINE.map(m=>{
+    if(m.id==="snr")return{...m,status:snr<=15?"flag":"pass",score:"SNR "+snr.toFixed(1)+" dB",detail:snr<=15?"Below 15.0 threshold":"Above threshold"};
+    if(m.id==="asr")return{...m,status:wer>0.15?"flag":"pass",score:"WER "+(wer*100).toFixed(1)+"%",detail:wer>0.15?"Exceeds 15% threshold":"Within threshold"};
+    if(m.id==="utmos")return{...m,status:utmos<3.2?"flag":"pass",score:"UTMOS "+utmos.toFixed(2),detail:utmos<3.2?"Below 3.2 ù review tone":"Acceptable range",tbd:true};
+    if(m.id==="artifact")return{...m,status:artifactScore>0.35?"flag":"pass",score:"Score "+artifactScore.toFixed(2),detail:artifactScore>0.35?"Artifacts detected":"Clean",tbd:true};
+    return{...m,status:"pass",score:"OK",detail:"Completed successfully"};
+  });
+  return{
+    status:"complete",
+    rawPath:"s3://bucket/raw/T-"+task.id+".wav",
+    processedPath:"s3://bucket/processed/T-"+task.id+".wav",
+    models,flags,snr,wers:wer,utmos,artifactScore,
+    recommendRerecord,
+    rerecordReason:recommendRerecord?(snr<=10?"Very low SNR ("+snr.toFixed(1)+" dB) ù audio quality may be unusable.":wer>0.25?"High WER ("+(wer*100).toFixed(0)+"%) ù transcript mismatch likely.":"Multiple QC flags detected ù recommend re-recording before review."):"",
+    expertOverride:false,
+    highPriority:flags.length>0
+  };
+}
+
+function seedExistingTaskQc(){
+  TASKS.forEach(t=>{
+    if(t.status==="Submitted"||t.reviewStage||(t.flags&&t.flags.length)){
+      t.qc=simulateQCResults(t);
+      if(t.snr&&t.snr<=15){
+        t.qc.snr=t.snr;
+        if(!t.qc.flags.some(f=>f.code==="SNR"))t.qc.flags.push({code:"SNR",value:t.snr.toFixed(1),severity:"review"});
+        const sm=t.qc.models.find(m=>m.id==="snr");
+        if(sm){sm.status="flag";sm.score="SNR "+t.snr.toFixed(1)+" dB";sm.detail="Below 15.0 threshold";}
+      }
+      if(t.wer&&t.wer>0.15){
+        t.qc.wers=t.wer;
+        if(!t.qc.flags.some(f=>f.code==="ASR"))t.qc.flags.push({code:"ASR",value:(t.wer*100).toFixed(1)+"%",severity:"review"});
+        const am=t.qc.models.find(m=>m.id==="asr");
+        if(am){am.status="flag";am.score="WER "+(t.wer*100).toFixed(1)+"%";am.detail="Exceeds 15% threshold";}
+      }
+      t.flags=t.qc.flags.map(f=>f.code);
+      t.utmos=t.qc.utmos;
+      if(t.qc.flags.length){t.qc.highPriority=true;t.qcPriority="high";t.reviewStage=t.reviewStage||"Initial Review Ready";}
+    }
+  });
+}
+
+function getQcFlaggedTasks(){
+  return TASKS.filter(t=>t.qc&&t.qc.highPriority&&t.qc.flags&&t.qc.flags.length);
+}
+
+function renderQcStep(m,state){
+  const icons={pending:"...",running:"...",pass:"OK",flag:"!",fail:"X"};
+  return `<div class="qc-step" id="qc-step-${m.id}"><div class="qc-step-icon ${state}">${icons[state]||""}</div><div class="qc-step-body"><div class="qc-step-name">${m.name}${m.tbd?'<span class="tbd-tag">TBD</span>':""}</div><div class="qc-step-detail">${m.desc||""}</div><div class="qc-step-score" id="qc-score-${m.id}"></div></div></div>`;
+}
+
+async function runAutoQCPipeline(task,onComplete){
+  qcPendingTask=task;
+  qcPendingCallback=onComplete;
+  const overlay=document.getElementById("qc-overlay");
+  overlay.classList.add("open");
+  document.getElementById("qc-modal-title").textContent="Running Auto-QC Pipeline";
+  document.getElementById("qc-modal-sub").textContent="T-"+task.id+" ù processing and analyzing...";
+  document.getElementById("qc-modal-close").style.display="none";
+  document.getElementById("qc-audio-versions").style.display="none";
+  document.getElementById("qc-flags-panel").style.display="none";
+  document.getElementById("qc-rerecord-panel").style.display="none";
+  document.getElementById("qc-done-panel").style.display="none";
+  document.getElementById("qc-pipeline-steps").innerHTML=QC_PIPELINE.map(m=>renderQcStep(m,"pending")).join("");
+  const results=simulateQCResults(task);
+  for(const m of QC_PIPELINE){
+    const el=document.getElementById("qc-step-"+m.id);
+    const icon=el.querySelector(".qc-step-icon");
+    icon.className="qc-step-icon running";
+    await sleep(350+(m.tbd?200:0));
+    const rm=results.models.find(x=>x.id===m.id);
+    const st=rm?rm.status:"pass";
+    icon.className="qc-step-icon "+st;
+    document.getElementById("qc-score-"+m.id).textContent=rm?(rm.score+(rm.detail?" ù "+rm.detail:"")):"";
+  }
+  task.qc=results;
+  task.snr=results.snr;
+  task.wer=results.wers;
+  task.utmos=results.utmos;
+  task.flags=results.flags.map(f=>f.code);
+  task.qcPriority=results.highPriority?"high":null;
+  document.getElementById("qc-audio-versions").style.display="block";
+  document.getElementById("qc-audio-path").textContent=results.rawPath;
+  initWaveform("qc-audio-wave");
+  qcCurrentAudioVer="raw";
+  if(results.flags.length){
+    document.getElementById("qc-flags-panel").style.display="block";
+    document.getElementById("qc-flag-list").innerHTML=results.flags.map(f=>'<div class="qc-flag-item"><strong>'+f.code+(f.tbd?" (experimental)":"")+'</strong>'+(QC_FLAG_DESC[f.code]||"")+' <span style="font-family:monospace;color:var(--text3)">'+f.value+'</span></div>').join("");
+  }
+  if(results.recommendRerecord){
+    document.getElementById("qc-rerecord-panel").style.display="block";
+    document.getElementById("qc-rerecord-reason").textContent=results.rerecordReason;
+    document.getElementById("qc-modal-sub").textContent="Analysis complete ù re-record recommended";
+  }else{
+    finishQcSubmission(false);
+  }
+}
+
+function finishQcSubmission(fromOverride){
+  const task=qcPendingTask;if(!task||!task.qc)return;
+  if(fromOverride)task.qc.expertOverride=true;
+  task.status="Submitted";
+  task.reviewStage=task.qc.highPriority?"Initial Review Ready":"Initial Review Ready";
+  document.getElementById("qc-rerecord-panel").style.display="none";
+  document.getElementById("qc-done-panel").style.display="block";
+  const msg=task.qc.highPriority
+    ?"<strong>Submitted with QC flags.</strong> Task sent to reviewer high-priority queue. "+(fromOverride?"Expert overrode re-record recommendation.":"")
+    :"<strong>All QC checks passed.</strong> Task enters review queue.";
+  document.getElementById("qc-done-msg").innerHTML=msg;
+  document.getElementById("qc-modal-title").textContent="Auto-QC Complete";
+  document.getElementById("qc-modal-sub").textContent=task.qc.highPriority?"Flagged for reviewer attention":"No flags detected";
+  document.getElementById("qc-modal-close").style.display="inline-flex";
+  if(qcPendingCallback)qcPendingCallback(task);
+  renderQcFlagsPage();renderReviewQueue();renderNav();
+}
+
+function qcChooseRerecord(){
+  closeQcModal();
+  if(qcPendingTask){qcPendingTask.status="In Progress";showPage("expert-record");openRecording(qcPendingTask);}
+}
+
+function qcOverrideRerecord(){finishQcSubmission(true);}
+
+function closeQcModal(){
+  document.getElementById("qc-overlay").classList.remove("open");
+  if(qcPendingCallback&&qcPendingTask&&qcPendingTask.status==="Submitted"){showPage("expert-tasks");renderExpertTasks();}
+  qcPendingTask=null;qcPendingCallback=null;
+}
+
+function switchAudioVer(ver,el){
+  qcCurrentAudioVer=ver;
+  if(!qcPendingTask||!qcPendingTask.qc)return;
+  document.querySelectorAll("#qc-audio-versions .audio-ver-tab").forEach(t=>t.classList.remove("active"));
+  if(el)el.classList.add("active");
+  document.getElementById("qc-audio-path").textContent=ver==="raw"?qcPendingTask.qc.rawPath:qcPendingTask.qc.processedPath;
+  initWaveform("qc-audio-wave");
+}
+
+function renderQcFlagsPage(){
+  const flagged=getQcFlaggedTasks();
+  const tbody=document.getElementById("qc-flags-tbody");
+  const stats=document.getElementById("qc-stats-row");
+  if(!tbody)return;
+  if(stats)stats.innerHTML=[
+    ["Flagged Tasks",flagged.length,"high priority"],
+    ["SNR Flags",flagged.filter(t=>t.flags.includes("SNR")).length,"SNR <= 15"],
+    ["ASR Flags",flagged.filter(t=>t.flags.includes("ASR")).length,"WER > 15%"],
+    ["Re-record Rec.",flagged.filter(t=>t.qc&&t.qc.recommendRerecord).length,"may be overridden"]
+  ].map(([l,v,s])=>'<div class="stat-card"><div class="stat-label">'+l+'</div><div class="stat-value">'+v+'</div><div class="stat-sub">'+s+'</div></div>').join("");
+  tbody.innerHTML=flagged.length?flagged.map(t=>{
+    const fl=t.qc.flags.map(f=>'<span class="flag-chip">'+f.code+'</span>').join("");
+    return '<tr onclick="openQcFlagDetail('+t.id+')"><td><span class="priority-dot"></span>High</td><td>T-'+t.id+'</td><td>'+t.speaker_id+'</td><td>'+t.locale+'</td><td>'+fl+'</td><td style="color:'+(t.snr&&t.snr<=15?"var(--amber)":"var(--text2)")+'">'+(t.snr!=null?t.snr.toFixed(1):"-")+'</td><td style="color:'+(t.wer&&t.wer>0.15?"var(--amber)":"var(--text2)")+'">'+(t.wer!=null?(t.wer*100).toFixed(1)+"%":"-")+'</td><td>'+(t.utmos?t.utmos.toFixed(2):"-")+'</td><td>'+(t.qc.recommendRerecord?'<span class="pill pill-red">Yes</span>':'<span class="pill pill-gray">No</span>')+'</td><td>'+(t.qc.expertOverride?'<span class="pill pill-amber">Overridden</span>':'-')+'</td><td><button class="btn btn-primary btn-sm">Review</button></td></tr>';
+  }).join(""):'<tr><td colspan="11" style="text-align:center;color:var(--text3)">No flagged tasks ù submit a recording to run auto-QC</td></tr>';
+}
+
+function openQcFlagDetail(id){
+  const t=TASKS.find(x=>x.id===id);if(!t||!t.qc)return;
+  qfdCurrentTaskId=id;
+  document.getElementById("qc-flag-detail").style.display="block";
+  document.getElementById("qfd-title").textContent="T-"+t.id+" ù "+t.speaker_id;
+  document.getElementById("qfd-transcript").textContent=t.revised_transcript||t.transcript;
+  document.getElementById("qfd-models").innerHTML=t.qc.models.map(m=>'<div class="qc-step"><div class="qc-step-icon '+m.status+'">'+(m.status==="pass"?"OK":"!")+'</div><div class="qc-step-body"><div class="qc-step-name">'+m.name+(m.tbd?'<span class="tbd-tag">TBD</span>':"")+'</div><div class="qc-step-score">'+m.score+" ù "+m.detail+'</div></div></div>').join("");
+  document.getElementById("qfd-flag-details").innerHTML=t.qc.flags.map(f=>'<div class="qc-flag-item"><strong>'+f.code+'</strong>'+(QC_FLAG_DESC[f.code]||"")+' <span style="font-family:monospace">'+f.value+'</span></div>').join("");
+  qfdSwitchAudio("processed");
+  initWaveform("qfd-waveform");
+}
+
+function qfdSwitchAudio(ver){
+  const t=TASKS.find(x=>x.id===qfdCurrentTaskId);if(!t||!t.qc)return;
+  document.getElementById("qfd-tab-raw").classList.toggle("active",ver==="raw");
+  document.getElementById("qfd-tab-proc").classList.toggle("active",ver==="processed");
+  document.getElementById("qfd-audio-path").textContent=ver==="raw"?t.qc.rawPath:t.qc.processedPath;
+}
+
+function claimQcFlagReview(){
+  if(!qfdCurrentTaskId)return;
+  openReview(qfdCurrentTaskId);
+  document.getElementById("qc-flag-detail").style.display="none";
+  showPage("reviewer-queue");
+}
+
+const TASKS=TRANSCRIPT_DATA.map((d,i)=>({
+  id:10001+i,
+  transcript:d.raw,
+  normalized_transcript:d.norm,
+  locale:EXPERT_LOCALE,
+  category:i%3===0?"Unscripted":"Scripted",
+  batch:"Batch 1",
+  status:["Unclaimed","Unclaimed","In Progress","Submitted","Rejected","Approved","Unclaimed","In Progress","Submitted","Approved"][i%10],
+  speaker_id:"speaker_042",
+  transcript_id:"TX-"+(10001+i),
+  subcategory:"customer_service",
+  snr:i===3?12.4:18.2,
+  flags:i===3?["SNR"]:i===7?["ASR"]:[],
+  reviewStage:i===3?"Initial Review Ready":i===7?"Final Review Ready":"",
+  revised:i===2,
+  revised_transcript:i===2?"Please hold while I retrieve your account information.":null,
+  revised_normalized_transcript:i===2?"Please hold while I retrieve your account information.":null,
+  wer:i===7?0.22:null,
+  utmos:null
+}));
+seedExistingTaskQc();
+
+function pill(s){const m={"Unclaimed":"pill-gray","In Progress":"pill-blue","Submitted":"pill-teal","Rejected":"pill-red","Approved":"pill-green","Initial Review Ready":"pill-amber","In Initial Review":"pill-amber","Final Review Ready":"pill-purple","In Final Review":"pill-purple","Flagged":"pill-red"};return `<span class="pill ${m[s]||"pill-gray"}">${s}</span>`;}
+
+function switchRole(role){
+  currentRole=role;
+  const names={expert:"Maria Chen",reviewer:"Oliver Beuthin",admin:"Roman Mansur",spec:"Engineering"};
+  const roles={expert:"Expert",reviewer:"Reviewer",admin:"Admin / HDM",spec:"Spec"};
+  document.getElementById("user-name").textContent=names[role];
+  document.getElementById("user-role").textContent=roles[role];
+  document.getElementById("user-avatar").textContent=names[role][0];
+  renderNav();
+  const first=NAV[role][0].id;
+  if(role==="expert"&&!isScreenerApproved())showPage("expert-screener");
+  else showPage(first);
+}
+
+function renderNav(){
+  const nav=document.getElementById("sidebar-nav");
+  const items=NAV[currentRole]||[];
+  const locked=currentRole==="expert"&&!isScreenerApproved();
+  nav.innerHTML=items.map(n=>{
+    const isLocked=n.gate&&locked;
+    let label=n.label;
+    if(n.id==="reviewer-qc"){const c=getQcFlaggedTasks().length;if(c)label+=" ("+c+")";}
+    return `<div class="nav-item${isLocked?" locked":""}" onclick="navClick('${n.id}')" id="nav-${n.id}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="${n.icon}"/></svg><span>${label}</span></div>`;
+  }).join("");
+}
+
+function navClick(id){
+  if(id==="expert-tasks"&&!isScreenerApproved()){showPage("expert-screener");return;}
+  showPage(id);
+}
+
+function showPage(id){
+  currentPage=id;
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  const page=document.getElementById("page-"+id);
+  if(page)page.classList.add("active");
+  const nav=document.getElementById("nav-"+id);
+  if(nav)nav.classList.add("active");
+  document.getElementById("topbar-title").textContent=TITLES[id]||id;
+  document.getElementById("topbar-sub").textContent=currentRole==="spec"?"Build reference for engineering team":"Interactive mockup - "+currentRole+" view";
+  if(id==="expert-screener")renderScreenerPage();
+  if(id==="expert-tasks"){renderTaskGate();renderExpertTasks();}
+  if(id==="reviewer-qc")renderQcFlagsPage();
+  if(id==="reviewer-queue")renderReviewQueue();
+  if(id==="admin-screener")renderAdminScreener();
+}
+
+function renderTaskGate(){
+  const banner=document.getElementById("task-gate-banner");
+  const content=document.getElementById("task-dashboard-content");
+  if(!banner||!content)return;
+  if(isScreenerApproved()){
+    banner.innerHTML=`<div class="lock-banner ok"><strong>Screener approved.</strong> You have full access to production tasks for ${EXPERT_PROFILE.locale}.</div>`;
+    content.style.opacity="1";content.style.pointerEvents="auto";
+    return;
+  }
+  banner.innerHTML=`<div class="lock-banner"><strong>Task Dashboard locked.</strong> Pass the screener task and receive client approval before claiming production tasks. <button class="btn btn-primary btn-sm" style="margin-left:10px" onclick="showPage('expert-screener')">Go to Screener</button></div>`;
+  content.style.opacity="0.35";content.style.pointerEvents="none";
+}
+
+function renderScreenerPage(){
+  const scr=getAssignedScreener();
+  const attempt=getNextScreenerAttempt();
+  const st=EXPERT_PROFILE.screenerStatus;
+  document.getElementById("screener-status-banner").innerHTML=
+    st==="approved"?`<div class="lock-banner ok"><strong>Screener approved.</strong> You can now access the Task Dashboard. ${screenerPill(st)}</div>`:
+    st==="pending_review"?`<div class="callout callout-warn"><strong>Submitted - awaiting client review.</strong> You will be notified if rework is needed. ${screenerPill(st)}</div>`:
+    st==="needs_rework"?`<div class="lock-banner"><strong>Client requested rework.</strong> Review feedback below and resubmit as <strong>v${attempt}</strong>. Same workflow as a production task. ${screenerPill(st)}</div>`:
+    `<div class="callout"><strong>Screener required.</strong> Complete one recording from the client pool before production tasking. ${screenerPill(st)}</div>`;
+  document.getElementById("scr-id").textContent=scr.id;
+  document.getElementById("scr-locale").textContent=scr.locale+" / "+scr.language;
+  document.getElementById("scr-filename").textContent=screenerFilename(attempt);
+  document.getElementById("screener-attempt-badge").textContent="next: v"+attempt;
+  document.getElementById("scr-preview-raw").textContent=scr.transcript;
+  document.getElementById("scr-preview-norm").textContent=scr.normalized_transcript;
+  const canRecord=st==="not_started"||st==="needs_rework";
+  document.getElementById("scr-start-btn").style.display=canRecord?"inline-flex":"none";
+  document.getElementById("scr-start-btn").textContent=attempt>1?"Open Screener Recording (Resubmit)":"Open Screener Recording";
+  document.getElementById("scr-resubmit-btn").style.display=(st==="needs_rework"&&attempt>1)?"inline-flex":"none";
+  const subs=getExpertSubmissions();
+  document.getElementById("screener-history-tbody").innerHTML=subs.length?subs.map(s=>{
+    const ap=s.clientApproved;
+    const apPill=ap?(ap==="Yes"?'<span class="pill pill-green">Yes</span>':'<span class="pill pill-red">'+ap+'</span>'):'<span class="pill pill-amber">Pending</span>';
+    return "<tr><td>"+s.timestamp+"</td><td>v"+s.attempt+"</td><td style=\"font-size:11px;color:var(--accent)\">"+s.filename+"</td><td>"+s.locale+"</td><td>"+apPill+"</td><td style=\"color:var(--text3)\">"+(s.clientNotes||"-")+"</td><td>"+(s.reworkSent||"-")+"</td></tr>";
+  }).join(""):
+    `<tr><td colspan="7" style="text-align:center;color:var(--text3)">No submissions yet</td></tr>`;
+  renderNav();renderTaskGate();
+}
+
+function demoScreenerState(state){
+  EXPERT_PROFILE.screenerStatus=state;
+  renderScreenerPage();
+}
+
+function buildScreenerTask(){
+  const scr=getAssignedScreener();
+  const attempt=getNextScreenerAttempt();
+  return{
+    id:"SCR-"+scr.id,isScreener:true,attempt:attempt,
+    transcript:scr.transcript,normalized_transcript:scr.normalized_transcript,
+    locale:scr.locale,category:"Scripted",batch:"Screener",status:"In Progress",
+    speaker_id:EXPERT_PROFILE.first.toLowerCase()+"_"+EXPERT_PROFILE.last.toLowerCase(),
+    transcript_id:scr.id,subcategory:"screener",language:scr.language,
+    filename:screenerFilename(attempt),revised_transcript:null,revised_normalized_transcript:null
+  };
+}
+
+function openScreenerRecording(){
+  if(EXPERT_PROFILE.screenerStatus==="pending_review"){alert("Awaiting client review on your last submission.");return;}
+  if(EXPERT_PROFILE.screenerStatus==="approved"){alert("Screener already approved.");return;}
+  openRecording(buildScreenerTask(),true);
+}
+
+function renderAdminScreener(){
+  const tbody=document.getElementById("admin-screener-tbody");
+  if(!tbody)return;
+  tbody.innerHTML=SCREENER_SUBMISSIONS.slice().reverse().map(s=>{
+    const name=s.expert_email.split("@")[0];
+    const approval=s.clientApproved||"Pending";
+    const pillCls=approval==="Yes"?"pill-green":approval==="Needs Work"?"pill-red":"pill-amber";
+    return `<tr><td>${name}</td><td style="font-size:11px">${s.slack||s.expert_email}</td><td>${s.locale}</td><td>v${s.attempt}</td>
+    <td style="font-size:11px;color:var(--accent)">${s.filename}</td><td>${s.timestamp}</td>
+    <td><span class="pill ${pillCls}">${approval}</span></td><td style="color:var(--text3)">${s.clientNotes||"-"}</td>
+    <td style="white-space:nowrap">${approval!=="Yes"?`<button class="btn btn-primary btn-sm" onclick="adminScreenerAction(${s.id},'approve')">Approve</button> <button class="btn btn-danger btn-sm" onclick="adminScreenerAction(${s.id},'rework')">Needs Work</button>`:"-"}</td></tr>`;
+  }).join("");
+}
+
+function adminScreenerAction(subId,action){
+  const s=SCREENER_SUBMISSIONS.find(x=>x.id===subId);if(!s)return;
+  if(action==="approve"){
+    s.clientApproved="Yes";s.reworkSent="";
+    if(s.expert_email===EXPERT_PROFILE.email)EXPERT_PROFILE.screenerStatus="approved";
+    alert("Approved - expert unlocked for tasking.");
+  }else{
+    const note=prompt("Client feedback (e.g. intonation, plosive):","intonation");
+    if(note===null)return;
+    s.clientApproved="Needs Work";s.clientNotes=note;s.reworkSent="Yes";
+    if(s.expert_email===EXPERT_PROFILE.email)EXPERT_PROFILE.screenerStatus="needs_rework";
+    alert("Rework sent - expert can resubmit with incremented attempt.");
+  }
+  renderAdminScreener();renderScreenerPage();
+}
+
+function filterExpertTasks(status,el){
+  document.querySelectorAll("#page-expert-tasks .status-tab").forEach(t=>t.classList.remove("active"));
+  if(el)el.classList.add("active");
+  expertFilter=status;expertPage=1;renderExpertTasks();
+}
+
+function renderExpertTasks(){
+  const q=document.getElementById("expert-search").value.toLowerCase();
+  const batch=document.getElementById("expert-batch-filter").value;
+  const cat=document.getElementById("expert-cat-filter").value;
+  const ft=TASKS.filter(t=>t.locale===EXPERT_LOCALE&&t.batch!=="Screener"&&(expertFilter==="all"||t.status===expertFilter)&&(!q||t.transcript.toLowerCase().includes(q)||String(t.id).includes(q))&&(!batch||t.batch===batch)&&(!cat||t.category===cat));
+  const start=(expertPage-1)*8;
+  const rows=ft.slice(start,start+8);
+  document.getElementById("expert-tbody").innerHTML=rows.map(t=>{
+    const act=t.status==="Unclaimed"?`<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();claimTask(${t.id})">Claim</button>`:`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openRecording(${t.id})">Open</button>`;
+    return `<tr onclick="openRecording(${t.id})"><td title="${t.transcript}">${t.transcript.slice(0,50)}...</td><td>T-${t.id}</td><td>${t.locale}</td><td>${t.category}</td><td>${t.batch}</td><td>${pill(t.status)}</td><td>${act}</td></tr>`;
+  }).join("")||`<tr><td colspan="7" style="text-align:center;color:var(--text3)">No tasks</td></tr>`;
+  document.getElementById("expert-pager-info").textContent=`${ft.length} tasks`;
+}
+
+function claimTask(id){
+  if(!isScreenerApproved()){alert("Pass screener first.");showPage("expert-screener");return;}
+  const t=TASKS.find(x=>x.id===id);
+  if(t&&t.status==="Unclaimed"){t.status="In Progress";renderExpertTasks();openRecording(t);}
+}
+
+function openRecording(taskOrId,isScreener){
+  const t=typeof taskOrId==="object"?taskOrId:TASKS.find(x=>x.id===taskOrId);
+  if(!t)return;
+  if(!isScreener&&!t.isScreener&&!isScreenerApproved()){alert("Pass screener first.");showPage("expert-screener");return;}
+  currentRecTask=t;currentRecIsScreener=!!(isScreener||t.isScreener);
+  transcriptConfirmed=false;equipmentPassed=false;hasRecording=false;hasListened=false;
+  showPage("expert-record");
+  document.getElementById("record-empty").style.display="none";
+  document.getElementById("record-workspace").style.display="block";
+  document.getElementById("rec-screener-tag").style.display=currentRecIsScreener?"block":"none";
+  document.getElementById("rec-title").textContent=currentRecIsScreener?"Screener v"+(t.attempt||1):"T-"+t.id;
+  document.getElementById("rec-meta").textContent=t.locale+" ù "+t.category+" ù "+t.batch;
+  document.getElementById("rec-status-pill").innerHTML=currentRecIsScreener?screenerPill(EXPERT_PROFILE.screenerStatus):pill(t.status);
+  document.getElementById("rec-transcript-raw").textContent=t.transcript;
+  document.getElementById("rec-transcript-normalized").textContent=t.normalized_transcript;
+  document.getElementById("rec-revised").value=t.revised_transcript||"";
+  const normEl=document.getElementById("rec-revised-normalized");
+  normEl.value=t.revised_normalized_transcript||"";
+  normEl.dataset.manual="";
+  normEl.dataset.lastAuto=normEl.value;
+  updateReadAloud();
+  document.getElementById("submit-rec-btn").disabled=true;
+  document.getElementById("submit-hint").textContent="Listen first";
+  document.getElementById("submit-filename").textContent=currentRecIsScreener&&t.filename?"File: "+t.filename:"";
+  initWaveform("eq-waveform");initWaveform("main-waveform");
+  renderMetadata(t);showRecTab("transcript",document.querySelector("#page-expert-record .content-tab"));
+}
+
+function renderMetadata(t){
+  const revised=document.getElementById("rec-revised").value.trim();
+  const revisedNorm=document.getElementById("rec-revised-normalized").value.trim();
+  const fields=[
+    ["speaker_id",t.speaker_id],
+    ["language",t.language||"English"],
+    ["locale",t.locale],
+    ["transcript_id",t.transcript_id],
+    ["script_batch",t.batch],
+    ["transcript_category",t.category],
+    ["transcript_subcategory",t.subcategory],
+    ["transcript (non-normalized)",t.transcript],
+    ["normalized_transcript",t.normalized_transcript],
+    ["duration_s","-"],
+    ["transcript_revision",revised?"true":"false"],
+    ["revised_transcript",revised||"-"],
+    ["revised_normalized_transcript",revisedNorm||"-"],
+    ["age_range","26-35"],
+    ["gender","Female"],
+    ["speaker_native_language","English"]
+  ];
+  if(currentRecIsScreener){
+    fields.unshift(["screener_attempt","v"+(t.attempt||1)],["audio_filename",t.filename||screenerFilename(t.attempt||1)]);
+  }
+  document.getElementById("metadata-grid").innerHTML=fields.map(([k,v])=>`<div class="meta-field"><label>${k}</label><div class="val">${v}</div></div>`).join("");
+}
+
+function showRecTab(id,el){
+  ["transcript","equipment","record","metadata"].forEach(x=>document.getElementById("rec-"+x).classList.remove("active"));
+  document.getElementById("rec-"+id).classList.add("active");
+  document.querySelectorAll("#page-expert-record .task-detail-body > .content-tabs .content-tab").forEach(t=>t.classList.remove("active"));
+  if(el)el.classList.add("active");
+  if(id==="metadata"&&currentRecTask)renderMetadata(currentRecTask);
+}
+
+function showRecMode(mode,el){
+  document.getElementById("rec-mode-browser").style.display=mode==="browser"?"block":"none";
+  document.getElementById("rec-mode-upload").style.display=mode==="upload"?"block":"none";
+  el.parentElement.querySelectorAll(".content-tab").forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
+}
+
+function confirmTranscript(){
+  transcriptConfirmed=true;
+  document.getElementById("verify-banner").className="callout callout-ok";
+  document.getElementById("verify-banner").innerHTML="<strong>Transcript verified.</strong> Proceed to equipment check.";
+  showRecTab("equipment",document.querySelectorAll("#page-expert-record .content-tab")[1]);
+}
+
+function initWaveform(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.innerHTML=Array.from({length:60},()=>`<div class="wave-bar" style="height:${4+Math.random()*8}px"></div>`).join("");
+}
+
+function animateWave(id,active){
+  const el=document.getElementById(id);if(!el)return;
+  if(!active){if(waveInterval)clearInterval(waveInterval);return;}
+  waveInterval=setInterval(()=>{
+    el.querySelectorAll(".wave-bar").forEach(b=>{b.style.height=(8+Math.random()*50)+"px";});
+  },80);
+}
+
+function toggleEqRecord(){
+  eqRecording=!eqRecording;
+  document.getElementById("eq-rec-btn").textContent=eqRecording?"Stop":"Record Test";
+  animateWave("eq-waveform",eqRecording);
+  if(eqRecording){eqTime=0;const iv=setInterval(()=>{if(!eqRecording){clearInterval(iv);document.getElementById("eq-result").innerHTML='<span class="badge badge-green">SNR 19.2 - Pass</span>';document.getElementById("eq-pass-btn").disabled=false;return;}eqTime+=0.1;document.getElementById("eq-time").textContent=fmtTime(eqTime);},100);}
+}
+
+function passEquipment(){equipmentPassed=true;showRecTab("record",document.querySelectorAll("#page-expert-record .content-tab")[2]);}
+
+function toggleMainRecord(){
+  if(!transcriptConfirmed||!equipmentPassed){alert("Complete transcript verification and equipment check first.");return;}
+  mainRecording=!mainRecording;
+  document.getElementById("main-rec-btn").textContent=mainRecording?"Recording...":"Record";
+  animateWave("main-waveform",mainRecording);
+  if(mainRecording){mainTime=0;const iv=setInterval(()=>{if(!mainRecording){clearInterval(iv);hasRecording=true;return;}mainTime+=0.1;document.getElementById("main-time").textContent=fmtTime(mainTime);},100);}
+}
+
+function stopMainRecord(){mainRecording=false;document.getElementById("main-rec-btn").textContent="Record";animateWave("main-waveform",false);hasRecording=true;}
+
+function playWave(which){
+  if(which==="main"&&!hasRecording){alert("Record first");return;}
+  hasListened=true;
+  document.getElementById("listen-gate").className="callout callout-ok";
+  document.getElementById("listen-gate").innerHTML="<strong>Playback complete.</strong> Submit enabled.";
+  document.getElementById("submit-rec-btn").disabled=false;
+  document.getElementById("submit-hint").textContent="";
+  animateWave(which+"-waveform",true);
+  setTimeout(()=>animateWave(which+"-waveform",false),2000);
+}
+
+function rewindMain(){mainTime=Math.max(0,mainTime-0.1);document.getElementById("main-time").textContent=fmtTime(mainTime);}
+function replayMain(){mainTime=0;document.getElementById("main-time").textContent=fmtTime(0);playWave("main");}
+function rerecordMain(){hasRecording=false;hasListened=false;mainTime=0;document.getElementById("main-time").textContent="00:00.0";document.getElementById("submit-rec-btn").disabled=true;initWaveform("main-waveform");}
+function simulateUpload(){hasRecording=true;document.getElementById("upload-status").textContent="file.wav uploaded (mono, 48kHz)";hasListened=true;document.getElementById("submit-rec-btn").disabled=false;}
+
+function submitRecording(){
+  if(!currentRecTask)return;
+  const revised=document.getElementById("rec-revised").value.trim();
+  const revisedNorm=document.getElementById("rec-revised-normalized").value.trim();
+  if(currentRecIsScreener||currentRecTask.isScreener){
+    const t=currentRecTask;
+    const sub={
+      id:SCREENER_SUBMISSIONS.length+1,
+      expert_email:EXPERT_PROFILE.email,slack:EXPERT_PROFILE.slack,
+      timestamp:new Date().toLocaleString("en-US",{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"}),
+      attempt:t.attempt,locale:t.locale,language:t.language||EXPERT_PROFILE.language,
+      audio:"platform://upload/"+t.filename,audioLink:"#",
+      clientApproved:"",clientNotes:"",reworkSent:"",
+      filename:t.filename||screenerFilename(t.attempt)
+    };
+    SCREENER_SUBMISSIONS.push(sub);
+    EXPERT_PROFILE.screenerStatus="pending_review";
+    alert("Screener submitted as "+sub.filename+"! Awaiting client review. You can resubmit if rework is requested.");
+    showPage("expert-screener");renderScreenerPage();renderAdminScreener();return;
+  }
+  currentRecTask.revised=!!revised;
+  currentRecTask.revised_transcript=revised||null;
+  currentRecTask.revised_normalized_transcript=revisedNorm||null;
+  runAutoQCPipeline(currentRecTask,function(){
+    renderExpertTasks();
+  });
+}
+
+function fmtTime(s){const m=Math.floor(s/60),sec=(s%60).toFixed(1);return String(m).padStart(2,"0")+":"+String(sec).padStart(4,"0");}
+
+function filterReview(status,el){
+  document.querySelectorAll("#page-reviewer-queue .status-tab").forEach(t=>t.classList.remove("active"));
+  if(el)el.classList.add("active");reviewFilter=status;renderReviewQueue();
+}
+
+function renderReviewQueue(){
+  const items=TASKS.filter(t=>["Submitted","Initial Review Ready","In Initial Review","Final Review Ready","In Final Review"].includes(t.status)||t.reviewStage||t.flags.length);
+  const ft=items.filter(t=>reviewFilter==="all"||(reviewFilter==="Flagged"&&t.flags.length)||t.reviewStage===reviewFilter||t.status===reviewFilter);
+  document.getElementById("review-tbody").innerHTML=ft.map(t=>{
+    const stage=t.reviewStage||t.status;
+    const flags=(t.flags||[]).map(f=>'<span class="flag-chip">'+f+'</span>').join("")||"-";
+    const werStr=t.wer!=null?(t.wer*100).toFixed(1)+"%":"-";
+    return '<tr onclick="openReview('+t.id+')"><td>T-'+t.id+'</td><td>'+t.speaker_id+'</td><td>'+t.locale+'</td><td>'+pill(stage)+'</td><td>'+flags+'</td><td style="color:'+(t.snr&&t.snr<=15?"var(--amber)":"var(--text2)")+'">'+(t.snr?t.snr.toFixed(1):"-")+'</td><td style="color:'+(t.wer&&t.wer>0.15?"var(--amber)":"var(--text2)")+'">'+werStr+'</td><td><button class="btn btn-ghost btn-sm">Review</button></td></tr>';
+  }).join("")||'<tr><td colspan="8">No items</td></tr>';
+}
+
+function openReview(id){
+  const t=TASKS.find(x=>x.id===id);if(!t)return;
+  document.getElementById("review-detail").style.display="block";
+  document.getElementById("rev-title").textContent="T-"+t.id+" ù "+t.speaker_id;
+  const flagHtml=(t.qc&&t.qc.flags?t.qc.flags:t.flags.map(c=>({code:c,value:""}))).map(f=>{
+    const code=typeof f==="string"?f:f.code;
+    const val=typeof f==="object"&&f.value?" ("+f.value+")":"";
+    return '<span class="flag-chip">'+code+": "+(QC_FLAG_DESC[code]||"")+val+'</span>';
+  }).join("");
+  document.getElementById("rev-flags").innerHTML=flagHtml+(t.qc&&t.qc.recommendRerecord?'<div style="margin-top:8px;font-size:12px;color:var(--red)">Re-record was recommended'+(t.qc.expertOverride?" but expert overrode.":".")+"</div>":"");
+  document.getElementById("rev-transcript-raw").textContent=t.transcript;
+  document.getElementById("rev-transcript-normalized").textContent=t.normalized_transcript;
+  const hasRev=!!(t.revised_transcript||t.revised);
+  document.getElementById("rev-revised-block").style.display=hasRev?"block":"none";
+  if(hasRev){
+    document.getElementById("rev-transcript-revised").textContent=t.revised_transcript||"-";
+    document.getElementById("rev-transcript-revised-norm").textContent=t.revised_normalized_transcript||"-";
+  }
+  document.getElementById("rev-revised-note").style.display=hasRev?"block":"none";
+  document.getElementById("rev-revised-note").textContent=hasRev?"Expert submitted revised transcript (both variants) - flagged at submission":"";
+  initWaveform("rev-waveform");
+  document.getElementById("review-checklist").innerHTML=CHECKLIST.map((c,i)=>`<div class="checklist-item"><input type="checkbox" id="chk-${i}"><label class="checklist-label" for="chk-${i}">${c}</label></div>`).join("");
+  const isFinal=(t.reviewStage||"").includes("Final");
+  document.getElementById("rev-actions").innerHTML=isFinal
+    ?`<button class="btn btn-primary" onclick="reviewAction(${id},'approved')">Approve</button><button class="btn btn-danger" onclick="reviewAction(${id},'reject')">Reject</button><button class="btn btn-secondary" onclick="reviewAction(${id},'escalate')">Escalate</button>`
+    :`<button class="btn btn-primary" onclick="reviewAction(${id},'pass')">Pass to Final</button><button class="btn btn-primary" onclick="reviewAction(${id},'approved')">Approve (skip final)</button><button class="btn btn-danger" onclick="reviewAction(${id},'reject')">Reject</button><button class="btn btn-secondary" onclick="reviewAction(${id},'escalate')">Escalate to HDM</button>`;
+}
+
+function reviewAction(id,action){
+  const t=TASKS.find(x=>x.id===id);if(!t)return;
+  if(action==="reject"){t.status="Rejected";t.reviewStage="";alert("Rejected - routed to expert with note.");}
+  else if(action==="approved"){t.status="Approved";t.reviewStage="";alert("Approved - enters pre-delivery batch.");}
+  else if(action==="pass"){t.reviewStage="Final Review Ready";alert("Sent to final review.");}
+  else alert("Escalated to HDM.");
+  document.getElementById("review-detail").style.display="none";renderReviewQueue();
+}
+
+function initLocales(){
+  document.getElementById("locales-tbody").innerHTML=LOCALES.map(([l,lang])=>`<tr><td style="font-family:monospace;color:var(--text)">${l}</td><td>${lang}</td></tr>`).join("");
+}
+
+function initStates(){
+  document.getElementById("state-flow-display").innerHTML=STATES.map((s,i)=>`<span class="state-node">${s}</span>${i<STATES.length-1?'<span class="state-arrow">&rarr;</span>':""}`).join("");
+  document.getElementById("state-transitions").innerHTML=TRANSITIONS.map(([f,t,b,n])=>`<tr><td>${f}</td><td>${t}</td><td>${b}</td><td style="color:var(--text3)">${n}</td></tr>`).join("");
+}
+
+function initAdmin(){
+  document.getElementById("locale-progress-tbody").innerHTML=LOCALES.slice(0,8).map(([l],i)=>`<tr><td>${l}</td><td>${20+i*5}h</td><td>80h</td><td>${Math.round((20+i*5)/80*100)}%</td></tr>`).join("");
+}
+
+function boot(){
+  switchRole("expert");
+  renderScreenerPage();
+  renderTaskGate();
+  renderExpertTasks();
+  renderReviewQueue();
+  renderQcFlagsPage();
+  renderAdminScreener();
+  initLocales();
+  initStates();
+  initAdmin();
+  initWaveform("eq-waveform");
+  initWaveform("main-waveform");
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);
+else boot();
+</script>
+</body>
+</html>
