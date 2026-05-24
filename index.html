@@ -269,7 +269,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;font-family:'Inter'
     <div class="task-detail">
       <div class="task-detail-header">
         <div><div class="task-detail-title" id="rec-title"></div><div style="font-size:12px;color:var(--text3);margin-top:3px" id="rec-meta"></div><div id="rec-screener-tag" style="display:none;margin-top:6px"><span class="pill pill-purple">Screener Task</span></div></div>
-        <div style="display:flex;gap:8px;align-items:center"><span id="rec-status-pill"></span><span class="spec-tag">mono ù 16-bit ù 48kHz</span></div>
+        <div style="display:flex;gap:8px;align-items:center"><span id="rec-status-pill"></span><span class="spec-tag">mono ¬ù 16-bit ¬ù 48kHz</span></div>
       </div>
       <div class="task-detail-body">
         <div class="content-tabs">
@@ -356,7 +356,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;font-family:'Inter'
 </div>
 
 <div class="page" id="page-reviewer-qc">
-  <div class="callout callout-warn"><strong><span class="priority-dot"></span>High-priority QC Flags.</strong> Every submission runs through auto-QC models on submit. Flagged tasks surface here first for reviewers. Flags are advisory ù reviewers use them as listening cues, not auto-rejects.</div>
+  <div class="callout callout-warn"><strong><span class="priority-dot"></span>High-priority QC Flags.</strong> Every submission runs through auto-QC models on submit. Flagged tasks surface here first for reviewers. Flags are advisory ¬ù reviewers use them as listening cues, not auto-rejects.</div>
   <div class="grid-4" style="margin-bottom:16px" id="qc-stats-row"></div>
   <div class="table-wrap"><table class="task-table"><thead><tr>
     <th>Priority</th><th>Task ID</th><th>Expert</th><th>Locale</th><th>Flags</th><th>SNR</th><th>WER</th><th>UTMOS</th><th>Re-record Rec.</th><th>Override?</th><th>Action</th>
@@ -673,15 +673,15 @@ const QC_PIPELINE=[
   {id:"echo",name:"Echo Reduction",desc:"Reverb / room echo suppression"},
   {id:"normalize",name:"Volume Normalization",desc:"Peak / loudness normalized to target LUFS"},
   {id:"vad",name:"VAD Trim",desc:"Clip head and tail to speech boundaries"},
-  {id:"asr",name:"ASR Verification",desc:"Compare utterance vs transcript ù flag if WER exceeds threshold"},
+  {id:"asr",name:"ASR Verification",desc:"Compare utterance vs transcript ¬ù flag if WER exceeds threshold"},
   {id:"snr",name:"SNR Verification",desc:"Flag if SNR <= 15.0 (background noise relative to speech)"},
   {id:"utmos",name:"UTMOSv2 Naturalness",desc:"MOS-style naturalness scoring",tbd:true},
   {id:"artifact",name:"Artifact Detection",desc:"Filter-based click/pop/artifact detection",tbd:true}
 ];
 const QC_FLAG_DESC={
   SNR:"Potentially larger background noise relative to speech audio (SNR <= 15.0).",
-  ASR:"Spoken audio may not match submitted transcript ù WER exceeds threshold.",
-  UTMOS:"Naturalness score below expected range ù review tone and delivery.",
+  ASR:"Spoken audio may not match submitted transcript ¬ù WER exceeds threshold.",
+  UTMOS:"Naturalness score below expected range ¬ù review tone and delivery.",
   ARTIFACT:"Potential audio artifacts detected (clicks, pops, or processing anomalies)."
 };
 let qcPendingTask=null,qcPendingCallback=null,qcCurrentAudioVer="raw",qfdCurrentTaskId=null;
@@ -703,7 +703,7 @@ function simulateQCResults(task){
   const models=QC_PIPELINE.map(m=>{
     if(m.id==="snr")return{...m,status:snr<=15?"flag":"pass",score:"SNR "+snr.toFixed(1)+" dB",detail:snr<=15?"Below 15.0 threshold":"Above threshold"};
     if(m.id==="asr")return{...m,status:wer>0.15?"flag":"pass",score:"WER "+(wer*100).toFixed(1)+"%",detail:wer>0.15?"Exceeds 15% threshold":"Within threshold"};
-    if(m.id==="utmos")return{...m,status:utmos<3.2?"flag":"pass",score:"UTMOS "+utmos.toFixed(2),detail:utmos<3.2?"Below 3.2 ù review tone":"Acceptable range",tbd:true};
+    if(m.id==="utmos")return{...m,status:utmos<3.2?"flag":"pass",score:"UTMOS "+utmos.toFixed(2),detail:utmos<3.2?"Below 3.2 ¬ù review tone":"Acceptable range",tbd:true};
     if(m.id==="artifact")return{...m,status:artifactScore>0.35?"flag":"pass",score:"Score "+artifactScore.toFixed(2),detail:artifactScore>0.35?"Artifacts detected":"Clean",tbd:true};
     return{...m,status:"pass",score:"OK",detail:"Completed successfully"};
   });
@@ -713,7 +713,7 @@ function simulateQCResults(task){
     processedPath:"s3://bucket/processed/T-"+task.id+".wav",
     models,flags,snr,wers:wer,utmos,artifactScore,
     recommendRerecord,
-    rerecordReason:recommendRerecord?(snr<=10?"Very low SNR ("+snr.toFixed(1)+" dB) ù audio quality may be unusable.":wer>0.25?"High WER ("+(wer*100).toFixed(0)+"%) ù transcript mismatch likely.":"Multiple QC flags detected ù recommend re-recording before review."):"",
+    rerecordReason:recommendRerecord?(snr<=10?"Very low SNR ("+snr.toFixed(1)+" dB) ¬ù audio quality may be unusable.":wer>0.25?"High WER ("+(wer*100).toFixed(0)+"%) ¬ù transcript mismatch likely.":"Multiple QC flags detected ¬ù recommend re-recording before review."):"",
     expertOverride:false,
     highPriority:flags.length>0
   };
@@ -757,7 +757,7 @@ async function runAutoQCPipeline(task,onComplete){
   const overlay=document.getElementById("qc-overlay");
   overlay.classList.add("open");
   document.getElementById("qc-modal-title").textContent="Running Auto-QC Pipeline";
-  document.getElementById("qc-modal-sub").textContent="T-"+task.id+" ù processing and analyzing...";
+  document.getElementById("qc-modal-sub").textContent="T-"+task.id+" ¬ù processing and analyzing...";
   document.getElementById("qc-modal-close").style.display="none";
   document.getElementById("qc-audio-versions").style.display="none";
   document.getElementById("qc-flags-panel").style.display="none";
@@ -773,7 +773,7 @@ async function runAutoQCPipeline(task,onComplete){
     const rm=results.models.find(x=>x.id===m.id);
     const st=rm?rm.status:"pass";
     icon.className="qc-step-icon "+st;
-    document.getElementById("qc-score-"+m.id).textContent=rm?(rm.score+(rm.detail?" ù "+rm.detail:"")):"";
+    document.getElementById("qc-score-"+m.id).textContent=rm?(rm.score+(rm.detail?" ¬ù "+rm.detail:"")):"";
   }
   task.qc=results;
   task.snr=results.snr;
@@ -792,7 +792,7 @@ async function runAutoQCPipeline(task,onComplete){
   if(results.recommendRerecord){
     document.getElementById("qc-rerecord-panel").style.display="block";
     document.getElementById("qc-rerecord-reason").textContent=results.rerecordReason;
-    document.getElementById("qc-modal-sub").textContent="Analysis complete ù re-record recommended";
+    document.getElementById("qc-modal-sub").textContent="Analysis complete ¬ù re-record recommended";
   }else{
     finishQcSubmission(false);
   }
@@ -852,16 +852,16 @@ function renderQcFlagsPage(){
   tbody.innerHTML=flagged.length?flagged.map(t=>{
     const fl=t.qc.flags.map(f=>'<span class="flag-chip">'+f.code+'</span>').join("");
     return '<tr onclick="openQcFlagDetail('+t.id+')"><td><span class="priority-dot"></span>High</td><td>T-'+t.id+'</td><td>'+t.speaker_id+'</td><td>'+t.locale+'</td><td>'+fl+'</td><td style="color:'+(t.snr&&t.snr<=15?"var(--amber)":"var(--text2)")+'">'+(t.snr!=null?t.snr.toFixed(1):"-")+'</td><td style="color:'+(t.wer&&t.wer>0.15?"var(--amber)":"var(--text2)")+'">'+(t.wer!=null?(t.wer*100).toFixed(1)+"%":"-")+'</td><td>'+(t.utmos?t.utmos.toFixed(2):"-")+'</td><td>'+(t.qc.recommendRerecord?'<span class="pill pill-red">Yes</span>':'<span class="pill pill-gray">No</span>')+'</td><td>'+(t.qc.expertOverride?'<span class="pill pill-amber">Overridden</span>':'-')+'</td><td><button class="btn btn-primary btn-sm">Review</button></td></tr>';
-  }).join(""):'<tr><td colspan="11" style="text-align:center;color:var(--text3)">No flagged tasks ù submit a recording to run auto-QC</td></tr>';
+  }).join(""):'<tr><td colspan="11" style="text-align:center;color:var(--text3)">No flagged tasks ¬ù submit a recording to run auto-QC</td></tr>';
 }
 
 function openQcFlagDetail(id){
   const t=TASKS.find(x=>x.id===id);if(!t||!t.qc)return;
   qfdCurrentTaskId=id;
   document.getElementById("qc-flag-detail").style.display="block";
-  document.getElementById("qfd-title").textContent="T-"+t.id+" ù "+t.speaker_id;
+  document.getElementById("qfd-title").textContent="T-"+t.id+" ¬ù "+t.speaker_id;
   document.getElementById("qfd-transcript").textContent=t.revised_transcript||t.transcript;
-  document.getElementById("qfd-models").innerHTML=t.qc.models.map(m=>'<div class="qc-step"><div class="qc-step-icon '+m.status+'">'+(m.status==="pass"?"OK":"!")+'</div><div class="qc-step-body"><div class="qc-step-name">'+m.name+(m.tbd?'<span class="tbd-tag">TBD</span>':"")+'</div><div class="qc-step-score">'+m.score+" ù "+m.detail+'</div></div></div>').join("");
+  document.getElementById("qfd-models").innerHTML=t.qc.models.map(m=>'<div class="qc-step"><div class="qc-step-icon '+m.status+'">'+(m.status==="pass"?"OK":"!")+'</div><div class="qc-step-body"><div class="qc-step-name">'+m.name+(m.tbd?'<span class="tbd-tag">TBD</span>':"")+'</div><div class="qc-step-score">'+m.score+" ¬ù "+m.detail+'</div></div></div>').join("");
   document.getElementById("qfd-flag-details").innerHTML=t.qc.flags.map(f=>'<div class="qc-flag-item"><strong>'+f.code+'</strong>'+(QC_FLAG_DESC[f.code]||"")+' <span style="font-family:monospace">'+f.value+'</span></div>').join("");
   qfdSwitchAudio("processed");
   initWaveform("qfd-waveform");
@@ -1085,7 +1085,7 @@ function openRecording(taskOrId,isScreener){
   document.getElementById("record-workspace").style.display="block";
   document.getElementById("rec-screener-tag").style.display=currentRecIsScreener?"block":"none";
   document.getElementById("rec-title").textContent=currentRecIsScreener?"Screener v"+(t.attempt||1):"T-"+t.id;
-  document.getElementById("rec-meta").textContent=t.locale+" ù "+t.category+" ù "+t.batch;
+  document.getElementById("rec-meta").textContent=t.locale+" ¬ù "+t.category+" ¬ù "+t.batch;
   document.getElementById("rec-status-pill").innerHTML=currentRecIsScreener?screenerPill(EXPERT_PROFILE.screenerStatus):pill(t.status);
   document.getElementById("rec-transcript-raw").textContent=t.transcript;
   document.getElementById("rec-transcript-normalized").textContent=t.normalized_transcript;
@@ -1249,7 +1249,7 @@ function renderReviewQueue(){
 function openReview(id){
   const t=TASKS.find(x=>x.id===id);if(!t)return;
   document.getElementById("review-detail").style.display="block";
-  document.getElementById("rev-title").textContent="T-"+t.id+" ù "+t.speaker_id;
+  document.getElementById("rev-title").textContent="T-"+t.id+" ¬ù "+t.speaker_id;
   const flagHtml=(t.qc&&t.qc.flags?t.qc.flags:t.flags.map(c=>({code:c,value:""}))).map(f=>{
     const code=typeof f==="string"?f:f.code;
     const val=typeof f==="object"&&f.value?" ("+f.value+")":"";
